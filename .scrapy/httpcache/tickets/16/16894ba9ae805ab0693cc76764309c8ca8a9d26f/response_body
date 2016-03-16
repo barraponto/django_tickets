@@ -1,0 +1,854 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #23408 (Add makemigrations warning for unique fields with callable defaults)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/23407" title="Ticket #23407" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/23408?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/23408?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/23408?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/23409" title="Ticket #23409" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/23407" title="Ticket #23407">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/23409" title="Ticket #23409">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2014-09-03T10%3A29%3A32-05%3A00&amp;precision=second" title="See timeline at 09/03/14 10:29:32">19 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-03-02T09%3A26%3A50-06%3A00&amp;precision=second" title="See timeline at 03/02/15 09:26:50">13 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/23408" class="trac-id">#23408</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Add makemigrations warning for unique fields with callable defaults</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=Harper04">Harper04</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Migrations">Migrations</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              <a href="/query?status=!closed&amp;cc=~Markush2010">Markush2010</a>, mail@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+Callables on properties for ModelFields are used for various reasons. One use case is to autocreate random file names or user passwords if not present.<br />
+The migration seems to call them only once because after the migration every "Buchung" has the same wlan_password.<br />
+</p>
+<p>
+My Model:<br />
+</p>
+<pre class="wiki">def random_wlan_key():
+    return ''.join(random.SystemRandom().choice("1234567890abcdefghkmnpqrstuvwxyz") for i in range(9))
+
+class Buchung(models.Model):
+    [...]
+    wlan_passwort = models.CharField(max_length=10, default=random_wlan_key)
+</pre><p>
+The generated migration:<br />
+</p>
+<pre class="wiki"># -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import main.models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('main', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='buchung',
+            name='wlan_passwort',
+            field=models.CharField(default=main.models.random_wlan_key, max_length=10),
+            preserve_default=True,
+        ),
+    ]
+
+</pre>
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(11)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1409758827724331">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-03T10%3A40%3A27-05%3A00&amp;precision=second" title="See timeline at 09/03/14 10:40:27">19 months ago</a> by bmispelon
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Hi,<br />
+</p>
+<p>
+I can reproduce this indeed. At this point, I'm not sure if this behavior is by design or not.<br />
+</p>
+<p>
+If not, we should definitely fix this and if it is, we should document it.<br />
+</p>
+<p>
+Thanks.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1409759693997822">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-03T10%3A54%3A53-05%3A00&amp;precision=second" title="See timeline at 09/03/14 10:54:53">19 months ago</a> by Harper04
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Hi,<br />
+</p>
+<p>
+thanks for your time. <br />
+</p>
+<p>
+I would argue that this behavior is not intended as best practice to create fields like "created_at" fields is to assign a callable.<br />
+Calling it only once during a migration is killing dynamic behavior. What if the default value of this field is dependent on another one?<br />
+</p>
+<p>
+regards<br />
+</p>
+<p>
+Tom<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1409789287879502">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-03T19%3A08%3A07-05%3A00&amp;precision=second" title="See timeline at 09/03/14 19:08:07">19 months ago</a> by Markush2010
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>Markush2010</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I wouldn't consider this a bug as the default value is nothing that is enforced on database level but inside Django. If you want to have random values per row, you need to add a <a class="ext-link" href="https://docs.djangoproject.com/en/1.7/ref/migration-operations/#django.db.migrations.operations.RunPython"><span class="icon">​</span>RunPython operation</a> that updates the value per row.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1409954009009356">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-05T16%3A53%3A29-05%3A00&amp;precision=second" title="See timeline at 09/05/14 16:53:29">19 months ago</a> by andrewgodwin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-resolution">
+      <strong class="trac-field-resolution">Resolution</strong>
+        set to <em>invalid</em>
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>new</em> to <em>closed</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+This is exactly as designed; when creating columns databases only take a single argument for the DEFAULT clause, so we can only provide a single value, so we only call a callable once. If you want unique values per row, you'll need to populate them in RunPython as Markush2010 suggests.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1410344924266598">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-10T05%3A28%3A44-05%3A00&amp;precision=second" title="See timeline at 09/10/14 05:28:44">18 months ago</a> by stavros
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I do indeed want unique values per row, and will populate them myself, but, in that case, I don't want Django setting the default and having me wonder down the line why the rows for which I didn't specify a value have a default of 2014-06-24. The correct behavior there would be to ignore the default completely, since there's no reasonable use case where it's supposed to call the callable once and use it for all the columns.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1416943960225297">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-11-25T13%3A32%3A40-06%3A00&amp;precision=second" title="See timeline at 11/25/14 13:32:40">16 months ago</a> by michaeljohnbarr
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Callables on properties for ModelFields are used for various reasons. One use case is to autocreate UUIDs (<a class="ext-link" href="https://docs.djangoproject.com/en/dev/ref/models/fields/#django.db.models.UUIDField"><span class="icon">​</span>https://docs.djangoproject.com/en/dev/ref/models/fields/#django.db.models.UUIDField</a>).<br />
+</p>
+<p>
+<strong>My Models:</strong><br />
+</p>
+<pre class="wiki">import uuid
+
+class AbstractUUIDModel(models.Model):
+    [...]
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, max_length=32, help_text='Universally unique identifier', unique=True, verbose_name='UUID')
+
+    class Meta:
+        abstract = True
+
+class Company(AbstractUUIDModel):
+    pass
+</pre><p>
+<strong>The generated migration:</strong><br />
+</p>
+<pre class="wiki"># -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import main.models
+import uuid
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('main', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='company',
+            name='uuid',
+            field=models.UUIDField(default=uuid.uuid4, editable=False, max_length=32, help_text='Universally unique identifier', unique=True, verbose_name='UUID'),
+            preserve_default=True,
+        ),
+    ]
+</pre><p>
+<strong>Results:</strong><br />
+</p>
+<pre class="wiki">django.db.utils.IntegrityError: could not create unique index "company_company_uuid_key"
+DETAIL:  Key (uuid)=(1ba0e330-9786-4928-b89d-b1fbef72b9c1) is duplicated.
+</pre><p>
+Based on the <a class="ext-link" href="https://docs.djangoproject.com/en/dev/ref/models/fields/#django.db.models.UUIDField"><span class="icon">​</span>documentation</a>, you should add the default=uuid.uuid4 on the models.UUIDField. However, you cannot do this with the current way migrations work. Django currently tries to generate the same UUID for each instance that is created. In this instance (Django 1.8 isn't released yet), you will run into issues:<br />
+</p>
+<pre class="wiki">import uuid
+from django.db import models
+
+class MyUUIDModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # other fields
+</pre><p>
+If default is set to a callable, I believe that it is implied that the result should be dynamically generated in Python/Django. If the functionality is to stay as stated in the result of this ticket, I would have to hand-code this migration for each app that previously existed to first create a nullable UUIDField with no default, then create a data migration to add distinct UUIDs to the Company, then write a migrations.AlterField migration to set null=False. The alternative might be to consider creating a special case for the UUIDField to allow for non-duplicated UUIDs to be created during migrations.<br />
+</p>
+<p>
+From what I can take away, it has been stated that you cannot add/alter a field with a default=callable, null=False, unique=True without writing a custom migration. It would be much easier if migrations followed the same standards as the <a class="ext-link" href="https://github.com/django/django/blob/1.7.1/django/db/models/fields/__init__.py#L713"><span class="icon">​</span>django.db.models.fields.Field.get_default()</a> method. Currently, we have to hand-code the following migration to avoid the failure for every app which utilizes the AbstractUUIDModel, which I feel violates the DRY principle:<br />
+</p>
+<pre class="wiki"># -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import uuid
+
+def generate_uuid(apps, schema_editor):
+    Company = apps.get_model('company', 'Company')
+    for company in Company.objects.all().iterator():
+        company.uuid = uuid.uuid4()
+
+        company.save()
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('main', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='company',
+            name='uuid',
+            field=models.UUIDField(editable=False, max_length=32, help_text='Universally unique identifier', null=True, verbose_name='UUID'),
+            preserve_default=False,
+        ),
+        migrations.RunPython(
+            generate_uuid,
+        ),
+        migrations.AlterField(
+            model_name='company',
+            name='uuid',
+            field=models.UUIDField(editable=False, max_length=32, help_text='Universally unique identifier', unique=True, verbose_name='UUID'),
+            preserve_default=True,
+        )
+    ]
+
+</pre>
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2014-11-25T14%3A38%3A55-06%3A00&amp;precision=second" title="See timeline at 11/25/14 14:38:55">16 months ago</a>
+        by michaeljohnbarr
+      (<a href="/ticket/23408?cversion=7&amp;cnum_hist=6#comment:6">previous</a>)
+      (<a href="/ticket/23408?action=comment-diff&amp;cnum=6&amp;version=8">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1418136837447794">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-09T08%3A53%3A57-06%3A00&amp;precision=second" title="See timeline at 12/09/14 08:53:57">15 months ago</a> by dbrgn
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>mail@…</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I just ran into the same issue (trying to set default UUIDs on an UUID field). Using per-row callables as default value in migrations would be very useful, although it should probably be specified in an explicit way.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1418139151092794">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-09T09%3A32%3A31-06%3A00&amp;precision=second" title="See timeline at 12/09/14 09:32:31">15 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>Automaticly created migration calls callable for default only once</em> to <em>Migrations call callable defaults only once</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-9-1418218815267893">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-10T07%3A40%3A15-06%3A00&amp;precision=second" title="See timeline at 12/10/14 07:40:15">15 months ago</a> by rowanseymour
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I also ran into this problem with a UUID field. I would have thought that this is a sufficiently common use case to be catered for in core. But core devs feel that the onus is on people to write custom 3-step migrations each time, then makemigrations should at least show a warning. I'd imagine that in most cases, a single value for all rows is not what the user is expecting. If makemigrations sees unique=True on the field then it knows that the migration will fail.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-10-1425199070078815">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-03-01T02%3A37%3A50-06%3A00&amp;precision=second" title="See timeline at 03/01/15 02:37:50">13 months ago</a> by spookylukey
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-resolution">
+      <strong class="trac-field-resolution">Resolution</strong>
+        <em>invalid</em> deleted
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>closed</em> to <em>new</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+It seems reasonable to me that <tt>makemigrations</tt> should, at the very least, issue a warning when it finds a field with a <tt>default</tt> which is callable and <tt>unique==True</tt>, and probably for all callable defaults when the field is being added. I'm re-opening on that basis, hope that's OK with other devs.<br />
+</p>
+<p>
+I think an ideal solution is that the warning should reference some shortcut/info for implementing the needed migration.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1425310010116139">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-03-02T09%3A26%3A50-06%3A00&amp;precision=second" title="See timeline at 03/02/15 09:26:50">13 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>Migrations call callable defaults only once</em> to <em>Add makemigrations warning for unique fields with callable defaults</em>
+    </li><li class="trac-field-type">
+      <strong class="trac-field-type">Type</strong>
+        changed from <em>Bug</em> to <em>New feature</em>
+    </li><li class="trac-field-version">
+      <strong class="trac-field-version">Version</strong>
+        changed from <em>1.7</em> to <em>master</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+The warning could point to this documentation: <a class="ext-link" href="https://docs.djangoproject.com/en/dev/howto/writing-migrations/#migrations-that-add-unique-fields"><span class="icon">​</span>https://docs.djangoproject.com/en/dev/howto/writing-migrations/#migrations-that-add-unique-fields</a><br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/23408?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/23408?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/23408?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

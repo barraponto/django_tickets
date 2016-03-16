@@ -1,0 +1,892 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #19963 (Add support for date_hierarchy across relations)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/19962" title="Ticket #19962" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/19963?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/19963?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/19963?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/19964" title="Ticket #19964" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="0e7f144922b5ab3c224d7204";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/19962" title="Ticket #19962">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/19964" title="Ticket #19964">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2013-03-01T16%3A38%3A22-06%3A00&amp;precision=second" title="See timeline at 03/01/13 16:38:22">3 years ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2016-01-27T11%3A24%3A50-06%3A00&amp;precision=second" title="See timeline at 01/27/16 11:24:50">7 weeks ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/19963" class="trac-id">#19963</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Add support for date_hierarchy across relations</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable">jbg@…</td>
+      <th id="h_owner" class="missing">Owned by:</th>
+      <td headers="h_owner"></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=contrib.admin">contrib.admin</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              hugo@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+I'm not sure exactly when this changed, but I think it was in the last few weeks of development leading up to the 1.5 release.<br />
+</p>
+<p>
+<tt>ModelAdmin.date_hierarchy</tt> used to support fields on related models. For example, I have a model <tt>Event</tt> with a <tt>day</tt> field, which is a <a class="wiki" href="/wiki/ForeignKey">ForeignKey</a> to <tt>Day</tt>, which in turn has a <tt>date</tt> field (of type DateField).<br />
+</p>
+<p>
+This used to work:<br />
+</p>
+<pre class="wiki">class EventAdmin(ModelAdmin):
+    date_hierarchy = 'day__date'
+</pre><p>
+Suddenly, as of a recent commit, it doesn't. This isn't addressed in the documentation in any way I can find.<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+    <div id="attachments">
+        <h3 class="foldable">Attachments <span class="trac-count">(1)</span></h3>
+        <div class="attachments">
+          <dl class="attachments">
+              <dt>
+    <a href="/attachment/ticket/19963/validation-of-date_hierarchy-across-relation-failing-test.diff" title="View attachment">validation-of-date_hierarchy-across-relation-failing-test.diff</a><a href="/raw-attachment/ticket/19963/validation-of-date_hierarchy-across-relation-failing-test.diff" class="trac-rawlink" title="Download">​</a>
+       (<span title="959 bytes">959 bytes</span>) -
+      added by <em>aaugustin</em> <a class="timeline" href="/timeline?from=2013-03-13T13%3A56%3A42-05%3A00&amp;precision=second" title="See timeline at 03/13/13 13:56:42">3 years ago</a>.
+  </dt>
+          </dl>
+          <p>
+            Download all attachments as: <a rel="nofollow" href="/zip-attachment/ticket/19963/">.zip</a>
+          </p>
+          
+        </div>
+    </div>
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(14)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1362177813217616">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-01T16%3A43%3A33-06%3A00&amp;precision=second" title="See timeline at 03/01/13 16:43:33">3 years ago</a> by jbg@…
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <pre class="wiki">2013-03-02 11:34:28,310 while handling request
+Traceback (most recent call last):
+  File "/home/.../django/django/db/models/options.py", line 341, in get_field_by_name
+    return self._name_map[name]
+KeyError: 'day__date'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/.../django/django/core/handlers/base.py", line 130, in get_response
+    response = response.render()
+  File "/home/.../django/django/template/response.py", line 105, in render
+    self.content = self.rendered_content
+  File "/home/.../django/django/template/response.py", line 82, in rendered_content
+    content = template.render(context)
+  File "/home/.../django/django/template/base.py", line 140, in render
+    return self._render(context)
+  File "/home/.../django/django/template/base.py", line 134, in _render
+    return self.nodelist.render(context)
+  File "/home/.../django/django/template/base.py", line 837, in render
+    bit = self.render_node(node, context)
+  File "/home/.../django/django/template/base.py", line 851, in render_node
+    return node.render(context)
+  File "/home/.../django/django/template/loader_tags.py", line 123, in render
+    return compiled_parent._render(context)
+  File "/home/.../django/django/template/base.py", line 134, in _render
+    return self.nodelist.render(context)
+  File "/home/.../django/django/template/base.py", line 837, in render
+    bit = self.render_node(node, context)
+  File "/home/.../django/django/template/base.py", line 851, in render_node
+    return node.render(context)
+  File "/home/.../django/django/template/loader_tags.py", line 123, in render
+    return compiled_parent._render(context)
+  File "/home/.../django/django/template/base.py", line 134, in _render
+    return self.nodelist.render(context)
+  File "/home/.../django/django/template/base.py", line 837, in render
+    bit = self.render_node(node, context)
+  File "/home/.../django/django/template/base.py", line 851, in render_node
+    return node.render(context)
+  File "/home/.../django/django/template/loader_tags.py", line 62, in render
+    result = block.nodelist.render(context)
+  File "/home/.../django/django/template/base.py", line 837, in render
+    bit = self.render_node(node, context)
+  File "/home/.../django/django/template/base.py", line 851, in render_node
+    return node.render(context)
+  File "/home/.../django/django/template/loader_tags.py", line 62, in render
+    result = block.nodelist.render(context)
+  File "/home/.../django/django/template/base.py", line 837, in render
+    bit = self.render_node(node, context)
+  File "/home/.../django/django/template/base.py", line 851, in render_node
+    return node.render(context)
+  File "/home/.../django/django/template/base.py", line 1192, in render
+    _dict = func(*resolved_args, **resolved_kwargs)
+  File "/home/.../django/django/contrib/admin/templatetags/admin_list.py", line 295, in date_hierarchy
+    field = cl.opts.get_field_by_name(field_name)[0]
+  File "/home/.../django/django/db/models/options.py", line 347, in get_field_by_name
+    % (self.object_name, name))
+django.db.models.fields.FieldDoesNotExist: Event has no field named 'day__date'
+</pre>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1362178231866688">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-01T16%3A50%3A31-06%3A00&amp;precision=second" title="See timeline at 03/01/13 16:50:31">3 years ago</a> by jbg@…
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+It looks like this commit did it: <a class="ext-link" href="https://github.com/django/django/commit/e74e207cce54802f897adcb42149440ee154821e"><span class="icon">​</span>https://github.com/django/django/commit/e74e207cce54802f897adcb42149440ee154821e</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1362178458235346">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-01T16%3A54%3A18-06%3A00&amp;precision=second" title="See timeline at 03/01/13 16:54:18">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+This commit isn't in 1.5, only in master. Indeed, it's backwards-incompatible, as documented in the 1.6 release notes.<br />
+</p>
+<p>
+Are you sure the problem is in 1.5?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1362178640659729">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-01T16%3A57%3A20-06%3A00&amp;precision=second" title="See timeline at 03/01/13 16:57:20">3 years ago</a> by jbg@…
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-version">
+      <strong class="trac-field-version">Version</strong>
+        changed from <em>1.5</em> to <em>master</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+My apologies, I left the "Version" field at its default and was ambiguous in my description. The commit was in the last few weeks of development leading up to the 1.5 release, but you're correct, the problem exists only in master.<br />
+</p>
+<p>
+I don't see anywhere in the 1.6 release notes where it says that <tt>date_hierarchy</tt> no longer supports fields on related models.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1362178874105106">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-01T17%3A01%3A14-06%3A00&amp;precision=second" title="See timeline at 03/01/13 17:01:14">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-severity">
+      <strong class="trac-field-severity">Severity</strong>
+        changed from <em>Normal</em> to <em>Release blocker</em>
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Yeah, I was unclear, the commit involves some backwards incompatibilities but the problem you're reporting isn't part of them. I just wanted to point out that the known incompatibilities were documented.<br />
+</p>
+<p>
+The bug is <a class="ext-link" href="https://github.com/django/django/commit/e74e207cce54802f897adcb42149440ee154821e#L0R295"><span class="icon">​</span>here</a>. Django now needs to determine if the target field is a date field or a datetime field, and this line doesn't take into account relations.<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2013-03-01T17%3A01%3A24-06%3A00&amp;precision=second" title="See timeline at 03/01/13 17:01:24">3 years ago</a>
+        by aaugustin
+      (<a href="/ticket/19963?cversion=0&amp;cnum_hist=5#comment:5">previous</a>)
+      (<a href="/ticket/19963?action=comment-diff&amp;cnum=5&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1362179047866459">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-01T17%3A04%3A07-06%3A00&amp;precision=second" title="See timeline at 03/01/13 17:04:07">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-owner">
+      <strong class="trac-field-owner">Owner</strong>
+        changed from <em>nobody</em> to <em>aaugustin</em>
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>new</em> to <em>assigned</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I guess I'm supposed to fix my own mess...<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1363200982261472">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-13T13%3A56%3A22-05%3A00&amp;precision=second" title="See timeline at 03/13/13 13:56:22">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I tried using <tt>date_hierarchy</tt> across a relation and it doesn't pass the admin validation:<br />
+</p>
+<pre class="wiki">ImproperlyConfigured: 'ChildAdmin.date_hierarchy' refers to field 'parent__date' that is missing from model 'testapp.Child'.
+</pre><p>
+Clearly it isn't a supported configuration. Validation is only performed when <tt>DEBUG = True</tt>, but that doesn't make it a supported configuration when <tt>DEBUG = False</tt>.<br />
+</p>
+<p>
+In fact the validation code is similar to the code I've added to look up the field:<br />
+<a class="ext-link" href="https://github.com/django/django/blob/master/django/contrib/admin/validation.py#L136-L142"><span class="icon">​</span>https://github.com/django/django/blob/master/django/contrib/admin/validation.py#L136-L142</a><br />
+</p>
+<p>
+I'm attaching a failing test case.<br />
+</p>
+<hr />
+<p>
+For the record, if Django started supporting date_hierarchy across relations, the following patch would fix the problem described above:<br />
+</p>
+<pre class="wiki">--- a/django/contrib/admin/templatetags/admin_list.py
++++ b/django/contrib/admin/templatetags/admin_list.py
+@@ -7,6 +7,7 @@ from django.contrib.admin.util import (lookup_field, display_for_field,
+ from django.contrib.admin.views.main import (ALL_VAR, EMPTY_CHANGELIST_VALUE,
+     ORDER_VAR, PAGE_VAR, SEARCH_VAR)
+ from django.contrib.admin.templatetags.admin_static import static
++from django.contrib.admin.utils import get_fields_from_path
+ from django.core.exceptions import ObjectDoesNotExist
+ from django.db import models
+ from django.utils import formats
+@@ -292,7 +293,7 @@ def date_hierarchy(cl):
+     """
+     if cl.date_hierarchy:
+         field_name = cl.date_hierarchy
+-        field = cl.opts.get_field_by_name(field_name)[0]
++        field = get_fields_from_path(cl.model, field_name)[-1]
+         dates_or_datetimes = 'datetimes' if isinstance(field, models.DateTimeField) else 'dates'
+         year_field = '%s__year' % field_name
+         month_field = '%s__month' % field_name
+</pre>
+    </div>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-13T13%3A56%3A42-05%3A00&amp;precision=second" title="See timeline at 03/13/13 13:56:42">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/19963/validation-of-date_hierarchy-across-relation-failing-test.diff"><em>validation-of-date_hierarchy-across-relation-failing-test.diff</em></a><a href="/raw-attachment/ticket/19963/validation-of-date_hierarchy-across-relation-failing-test.diff" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-8-1363201236615668">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-13T14%3A00%3A36-05%3A00&amp;precision=second" title="See timeline at 03/13/13 14:00:36">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-owner">
+      <strong class="trac-field-owner">Owner</strong>
+        <em>aaugustin</em> deleted
+    </li><li class="trac-field-severity">
+      <strong class="trac-field-severity">Severity</strong>
+        changed from <em>Release blocker</em> to <em>Normal</em>
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>assigned</em> to <em>new</em>
+    </li><li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>date_hierarchy suddenly doesn’t support fields on related models</em> to <em>Add support for date_hierarchy across relations</em>
+    </li><li class="trac-field-type">
+      <strong class="trac-field-type">Type</strong>
+        changed from <em>Bug</em> to <em>New feature</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Re-qualifying the ticket as a feature request — it seems useful to me.<br />
+</p>
+<p>
+Unless unexpected problems crop up, this means:<br />
+</p>
+<ul><li>upgrading the validation code,
+</li><li>adding the validation tests I just uploaded,
+</li><li>applying the diff I pasted above,
+</li><li>adding tests,
+</li><li>adding docs.
+</li></ul>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-9-1363204330445356">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-13T14%3A52%3A10-05%3A00&amp;precision=second" title="See timeline at 03/13/13 14:52:10">3 years ago</a> by julien
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Aymeric, your plan sounds like the right way to go.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-10-1378089983713160">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-09-01T21%3A46%3A23-05%3A00&amp;precision=second" title="See timeline at 09/01/13 21:46:23">3 years ago</a> by jbg@…
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+This is purely a "practicality" suggestion, but given that this used to work, and it doesn't look like it will work in 1.6 final, it may be worth mentioning in the 1.6 release notes? Despite the fact that it was an unsupported configuration and was not mentioned in the docs (as far as I can tell), it worked fine, and if I'd been using it for months (after assuming it would work, trying it out, and finding that it did work) then I imagine other people might have been too.<br />
+</p>
+<p>
+So even just mentioning in the release notes, perhaps alongside the other date-related backwards incompatibilities, that it no longer works in 1.6 might save a bunch of people a headache!<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1440570815122404">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-08-26T01%3A33%3A35-05%3A00&amp;precision=second" title="See timeline at 08/26/15 01:33:35">7 months ago</a> by hobarrera
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>hugo@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-12-1453912550861122">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:12" class="cnum">
+    <a href="#comment:12">comment:12</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-01-27T10%3A35%3A50-06%3A00&amp;precision=second" title="See timeline at 01/27/16 10:35:50">7 weeks ago</a> by eltismerino
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+This ticket is fairly old. I've just discovered that it is still valid for Django 1.8. Any plans on reimplementing the RelatedField/ForeignKey feature for date_hierarchy?<br />
+</p>
+<p>
+Thanks<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-13-1453915490369116">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:13" class="cnum">
+    <a href="#comment:13">comment:13</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-01-27T11%3A24%3A50-06%3A00&amp;precision=second" title="See timeline at 01/27/16 11:24:50">7 weeks ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+No, there aren't any plans outside of the discussion in this ticket, so feel free to take ownership and provide a patch.<br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/19963?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/19963?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/19963?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

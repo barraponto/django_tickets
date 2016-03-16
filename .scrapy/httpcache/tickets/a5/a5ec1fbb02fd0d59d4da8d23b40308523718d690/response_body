@@ -1,0 +1,898 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #23155 (Add request attr to user_login_failed signal)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/23154" title="Ticket #23154" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/23155?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/23155?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/23155?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/23156" title="Ticket #23156" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/23154" title="Ticket #23154">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/23156" title="Ticket #23156">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2014-08-03T05%3A37%3A45-05%3A00&amp;precision=second" title="See timeline at 08/03/14 05:37:45">20 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2016-03-15T18%3A46%3A00-05%3A00&amp;precision=second" title="See timeline at 03/15/16 18:46:00">85 minutes ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/23155" class="trac-id">#23155</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Add request attr to user_login_failed signal</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=anonymous">anonymous</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=contrib.auth">contrib.auth</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              brian@…, moritz.sichert@…, gavinwahl+gh@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=1">yes</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=1">yes</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+It would be convenient to request instance in the signal user_login_failed.<br />
+This will get the users data and make limitations, such as IP address.<br />
+What do you think?<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(19)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1407111424839558">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-03T19%3A17%3A04-05%3A00&amp;precision=second" title="See timeline at 08/03/14 19:17:04">20 months ago</a> by brian
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+The user_logged_in and user_logged_out signals both have the request parameter, so having request for user_login_failed would make sense IMHO.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1407112496273198">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-03T19%3A34%3A56-05%3A00&amp;precision=second" title="See timeline at 08/03/14 19:34:56">20 months ago</a> by brian
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>brian@…</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Implementing this looks not-trivial.<br />
+</p>
+<p>
+The authenticate() method at django.contrib.auth takes username and password parameters, but does not take a request parameter. <br />
+</p>
+<p>
+<a class="ext-link" href="https://docs.djangoproject.com/en/dev/topics/auth/default/#django.contrib.auth.authenticate"><span class="icon">​</span>https://docs.djangoproject.com/en/dev/topics/auth/default/#django.contrib.auth.authenticate</a><br />
+</p>
+<p>
+This function sends the user_login_failed signal. Fixing this may require changing the API of authenticate().<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1407139846429988">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T03%3A10%3A46-05%3A00&amp;precision=second" title="See timeline at 08/04/14 03:10:46">20 months ago</a> by anonymous
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Adding optional request attr to authenticate() function and according to Authentication backends would give more options and flexibility.<br />
+I believe that the framework should be improved and made ​​more flexible.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1407143726116418">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T04%3A15%3A26-05%3A00&amp;precision=second" title="See timeline at 08/04/14 04:15:26">20 months ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Simply passing <tt>request</tt> to <tt>authenticate</tt> is backwards incompatible: every third-party authentication backend will be silently skipped because the arguments don't match.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1407162414482546">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T09%3A26%3A54-05%3A00&amp;precision=second" title="See timeline at 08/04/14 09:26:54">20 months ago</a> by tomc
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-version">
+      <strong class="trac-field-version">Version</strong>
+        changed from <em>1.7-rc-2</em> to <em>master</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-6-1407164995183809">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T10%3A09%3A55-05%3A00&amp;precision=second" title="See timeline at 08/04/14 10:09:55">20 months ago</a> by timo
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Aymeric, I think you mixed <tt>django.contrib.auth.authenticate()</tt> and the <tt>authenticate()</tt> method of each backend. We wouldn't have to pass <tt>request</tt> to the auth backends because the signal is sent in the former so it might be feasible.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1407393476385207">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-07T01%3A37%3A56-05%3A00&amp;precision=second" title="See timeline at 08/07/14 01:37:56">20 months ago</a> by brian
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+The caller of <tt>django.contrib.auth.authenticate()</tt> would have to be updated to take this new parameter. That could be code outside Django.<br />
+</p>
+<p>
+We could make it an optional parameter, however then you don't actually get the benefits unless it is called correctly. New code that uses the new request parameter will get confused if used with older Django versions as the request parameter will become part of <tt>**credentials</tt>, and this will get passed through to every backend, like it or not.<br />
+</p>
+<p>
+The current code is:<br />
+</p>
+<pre class="wiki">  def authenticate(**credentials):                                                 
+      for backend in get_backends():                                               
+          try:                                                                     
+              user = backend.authenticate(**credentials)                           
+          [...]
+</pre>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1407393528905741">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-07T01%3A38%3A48-05%3A00&amp;precision=second" title="See timeline at 08/07/14 01:38:48">20 months ago</a> by brian
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Also <tt>**credentials</tt> is used to generate the user_login_failed signal.<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2014-08-11T02%3A33%3A41-05%3A00&amp;precision=second" title="See timeline at 08/11/14 02:33:41">19 months ago</a>
+        by brian
+      (<a href="/ticket/23155?cversion=0&amp;cnum_hist=8#comment:8">previous</a>)
+      (<a href="/ticket/23155?action=comment-diff&amp;cnum=8&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-9-1455067129573174">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-09T19%3A18%3A49-06%3A00&amp;precision=second" title="See timeline at 02/09/16 19:18:49">5 weeks ago</a> by gavinwahl
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+One way I thought of to fix this is to add an optional <tt>_request</tt> kwarg to django.contrib.auth.authenticate. If provided, it would be passed into the call to user_login_failed. This would be backwards incompatible if anyone were using an authentication backend that used <tt>_request</tt>, which seems unlikely. Would a patch implementing this approach be accepted?<br />
+</p>
+<p>
+As it is user_login_failed isn't useful for what seems like its primary purpose -- logging suspected attacks, which would need the IP address to be useful at all.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-10-1455644806640469">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-16T11%3A46%3A46-06%3A00&amp;precision=second" title="See timeline at 02/16/16 11:46:46">4 weeks ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I don't see any obvious problem with that. The underscore seems unnecessary to me unless you know of a case where there would be a collision.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1455841128369210">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-18T18%3A18%3A48-06%3A00&amp;precision=second" title="See timeline at 02/18/16 18:18:48">4 weeks ago</a> by gavinwahl
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+It seems reasonable that someone has an auth backend that does already take the whole request as a credential, and I wouldn't want to break that. I'll send a pull request soon.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-12-1455843594325218">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:12" class="cnum">
+    <a href="#comment:12">comment:12</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-18T18%3A59%3A54-06%3A00&amp;precision=second" title="See timeline at 02/18/16 18:59:54">4 weeks ago</a> by gavinwahl
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-has_patch">
+      <strong class="trac-field-has_patch">Has patch</strong>
+        set
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+&lt;<a class="ext-link" href="https://github.com/django/django/pull/6158"><span class="icon">​</span>https://github.com/django/django/pull/6158</a>&gt;<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-13-1455899036876224">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:13" class="cnum">
+    <a href="#comment:13">comment:13</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-19T10%3A23%3A56-06%3A00&amp;precision=second" title="See timeline at 02/19/16 10:23:56">4 weeks ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Accepted</em> to <em>Ready for checkin</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-14-1456155560946579">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:14" class="cnum">
+    <a href="#comment:14">comment:14</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-22T09%3A39%3A20-06%3A00&amp;precision=second" title="See timeline at 02/22/16 09:39:20">3 weeks ago</a> by MoritzS
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I think the underscore is not really necessary.<br />
+</p>
+<p>
+It might be reasonable that some people already pass the request to <tt>authenticate()</tt> but I don't think it's likely that anyone would use the request keyword for anything else than the actual request.<br />
+</p>
+<p>
+Another disadvantage for using the underscore is that if you have a backend that expects a request you'd have to write something like <tt>authenticate(request=request, _request=request)</tt>.<br />
+</p>
+<p>
+I propose the request argument to be handled just like any other keyword argument, i.e. passing it along to the backend.<br />
+</p>
+<p>
+This has following advantages:<br />
+</p>
+<ul><li>the <tt>authenticate(request=request, _request=request)</tt> syntax is not needed
+</li><li>there won't be any backwards compatibilities regarding authentication backends because if you passed the request to <tt>authenticate()</tt> before, it will still be passed to the backend, and if you didn't, the backend won't get any unexpected arguments
+</li><li>it is still possible to provide a backwards compatibility path, if needed, by first trying to call the backend with the request and if that fails because of a <tt>TypeError</tt> try again without it
+</li></ul><p>
+What do you think?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-15-1456162533028884">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:15" class="cnum">
+    <a href="#comment:15">comment:15</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-22T11%3A35%3A33-06%3A00&amp;precision=second" title="See timeline at 02/22/16 11:35:33">3 weeks ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        set
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Ready for checkin</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+A deprecation path toward making <tt>request</tt> a required argument of <tt>backend.authenticate()</tt> makes sense to me and does seem cleaner in the long run. I guess that should be a separate ticket that precedes this one though.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-16-1456352249310947">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:16" class="cnum">
+    <a href="#comment:16">comment:16</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-02-24T16%3A17%3A29-06%3A00&amp;precision=second" title="See timeline at 02/24/16 16:17:29">3 weeks ago</a> by MoritzS
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>moritz.sichert@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-17-1458069847867241">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:17" class="cnum">
+    <a href="#comment:17">comment:17</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-03-15T14%3A24%3A07-05%3A00&amp;precision=second" title="See timeline at 03/15/16 14:24:07">6 hours ago</a> by gavinwahl
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I'm unsure how to continue. What is the desired change?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-18-1458069877755334">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:18" class="cnum">
+    <a href="#comment:18">comment:18</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-03-15T14%3A24%3A37-05%3A00&amp;precision=second" title="See timeline at 03/15/16 14:24:37">6 hours ago</a> by gavinwahl
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>gavinwahl+gh@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-19-1458085560116766">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:19" class="cnum">
+    <a href="#comment:19">comment:19</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2016-03-15T18%3A46%3A00-05%3A00&amp;precision=second" title="See timeline at 03/15/16 18:46:00">85 minutes ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+What I meant about a separate ticket for a deprecation to make <tt>request</tt> a required argument for authentication backends is something like this in <tt>authenticate()</tt>:<br />
+</p>
+<div class="code"><pre><span class="k">try</span><span class="p">:</span>
+    inspect<span class="o">.</span>getcallargs<span class="p">(</span>backend<span class="o">.</span>authenticate<span class="p">,</span> request<span class="p">,</span> <span class="o">**</span>credentials<span class="p">)</span>
+<span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        inspect<span class="o">.</span>getcallargs<span class="p">(</span>backend<span class="o">.</span>authenticate<span class="p">,</span> <span class="o">**</span>credentials<span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="c"># This backend doesn't accept these credentials as arguments. Try the next one.</span>
+        <span class="k">continue</span>
+    <span class="k">else</span><span class="p">:</span>
+        warnings<span class="o">.</span>warn<span class="p">(</span>
+            <span class="s">"Update authentication backend </span><span class="si">%s</span><span class="s"> to accept a "</span>
+            <span class="s">"positional `request` argument."</span> <span class="o">%</span> backend
+            RemovedInDjango20Warning
+        <span class="p">)</span>
+</pre></div>
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <script type="text/javascript">
+        jQuery.loadStyleSheet("/pygments/trac.css", "text/css");
+    </script>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/23155?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/23155?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/23155?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

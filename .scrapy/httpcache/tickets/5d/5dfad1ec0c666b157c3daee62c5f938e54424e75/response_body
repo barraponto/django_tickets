@@ -1,0 +1,613 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #24121 (Provide a better repr() experience)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/24120" title="Ticket #24120" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/24121?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/24121?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/24121?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/24122" title="Ticket #24122" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/24120" title="Ticket #24120">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/24122" title="Ticket #24122">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2015-01-11T04%3A34%3A49-06%3A00&amp;precision=second" title="See timeline at 01/11/15 04:34:49">14 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-08-31T15%3A08%3A41-05%3A00&amp;precision=second" title="See timeline at 08/31/15 15:08:41">7 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/24121" class="trac-id">#24121</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Provide a better repr() experience</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=kezabelle">kezabelle</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Uncategorized">Uncategorized</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              django@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+For a long time, Django has shipped with the debug 500 handler, which defaults to a view where "local vars" for every stack frame can be expanded and inspected to see the internal state at the various points in the stack trace.<br />
+</p>
+<p>
+Between that renderer, the heavy usage of <tt>django-debug-toolbar</tt>, which ships with a template context inspector, and my preference throwing <tt>pdb</tt> everywhere, there is a notable lack of a good <tt>repr()</tt> experience in much of Django, both in debugging public API (that is, the bits a user will use and encounter), and internals that might be exposed, or could otherwise be served better by having a repr that says something more than it's address/id.<br />
+</p>
+<p>
+A couple of previous tickets have addressed this in minor, one off ways - <a class="closed ticket" href="/ticket/23167" title="New feature: BaseForm lacks a useful repr (closed: fixed)">#23167</a>, <a class="closed ticket" href="/ticket/22906" title="New feature: Give ModelState a __repr__() (closed: fixed)">#22906</a>, <a class="closed ticket" href="/ticket/22531" title="New feature: Q objects lack a useful repr (closed: fixed)">#22531</a> - but as I've begun collecting places they could supply useful info as I spot them in my stuff, they've become a hodgepodge across a number of modules.<br />
+</p>
+<p>
+For example, a couple I've got implemented:<br />
+</p>
+<pre class="wiki">&lt;TemplateResponse status_code=200, charset=utf-8, _is_rendered=False&gt;
+
+&lt;LoaderOrigin name=/absolute/path/to/templates/admin/change_list.html, loadname=admin/change_list.html&gt;
+
+&lt;FilterExpression var=u'admin/change_list.html', filters=[]&gt;
+</pre><p>
+All of which, IMHO, provide a more useful context in which to evaluate state.<br />
+</p>
+<p>
+The branch I have implemented my reprs in is in no way merge ready yet, partially because there's no tests, and it'd need rebasing &amp; squashing, but also because there are some parts I'd like to see reprs on but haven't landed on a good way to do so.<br />
+An example being the concept of a <tt>Loader</tt>, which currently has no repr() and thus shows up as <tt>&lt;path.to.cached.Loader … 0xETC&gt;</tt> which at least tells us which loader is being referenced. Given the convention so far for reprs() is just the class name (rather than module + class), the fact all Loaders (and now Engines) all share the same class name means in exposing more useful internal state we lose knowledge of the loader in question's module namespace.<br />
+</p>
+<p>
+As I write this, I've got at least rudimentary (as in, it was possibly to replace the 0x... with at least one object-state variable) reprs for:<br />
+</p>
+<ul><li><tt>StaticNode</tt>
+</li><li><tt>BlockTranslateNode</tt>
+</li><li><tt>URLNode</tt>
+</li><li><tt>Token</tt>
+</li><li><tt>Lexer</tt>
+</li><li><tt>Parser</tt>
+</li><li><tt>FilterExpression</tt>
+</li><li><tt>RedirectFallbackMiddleware</tt>
+</li><li><tt>MessageMiddleware</tt>
+</li><li><tt>RemoteUserMiddleware</tt>
+</li><li><tt>Col</tt>
+</li><li><tt>Lookup</tt>
+</li><li><tt>BaseDatabaseWrapper</tt>
+</li><li><tt>SQLCompiler</tt>
+</li><li><tt>JoinPromoter</tt>
+</li><li><tt>HttpResponseNotAllowed</tt>
+</li><li><tt>PermWrapper</tt>
+</li><li><tt>SessionStorage</tt>
+</li><li><tt>CookieStorage</tt>
+</li><li><tt>FallbackStorage</tt>
+</li><li><tt>ChangeList</tt>
+</li><li><tt>AdminForm</tt>
+</li><li><tt>InlineAdminFormSet</tt>
+</li><li><tt>CsrfViewMiddleware</tt>
+</li><li><tt>Response</tt>
+</li><li><tt>SimpleTemplateResponse</tt>
+</li><li><tt>TemplateResponse</tt>
+</li><li><tt>AdminSite</tt>
+</li><li><tt>ModelAdmin</tt>
+</li><li><tt>Origin</tt>
+</li><li><tt>TemplateOrigin</tt>
+</li><li><tt>BlockContext</tt>
+</li><li><tt>IncludeNode</tt>
+</li><li><tt>Template</tt>/<tt>Engine</tt> (would need work still I think)
+</li></ul><p>
+If accepted, this ticket could just track whatever I can end up getting reviewed/merged, or it could be a meta-ticket for accepting as a principle, and I could spin off tickets for more targeted areas. <br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(5)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1420977680882927">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-01-11T06%3A01%3A20-06%3A00&amp;precision=second" title="See timeline at 01/11/15 06:01:20">14 months ago</a> by jarshwah
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-2-1420978483080867">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-01-11T06%3A14%3A43-06%3A00&amp;precision=second" title="See timeline at 01/11/15 06:14:43">14 months ago</a> by berkerpeksag
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <blockquote class="citation">
+<p>
+&lt;TemplateResponse status_code=200, charset=utf-8, _is_rendered=False&gt;<br />
+</p>
+<p>
+&lt;LoaderOrigin name=/absolute/path/to/templates/admin/change_list.html, loadname=admin/change_list.html&gt;<br />
+</p>
+<p>
+&lt;FilterExpression var=u'admin/change_list.html', filters=[]&gt;<br />
+</p>
+</blockquote>
+<p>
+<tt>charset</tt>, <tt>name</tt> and <tt>loadname</tt> should also be a string.<br />
+</p>
+<pre class="wiki">&lt;TemplateResponse status_code=200, charset='utf-8', _is_rendered=False&gt;
+
+&lt;LoaderOrigin name='/absolute/path/to/templates/admin/change_list.html', loadname='admin/change_list.html'&gt;
+</pre><p>
+Here's an example from Python:<br />
+</p>
+<pre class="wiki">&gt;&gt;&gt; open('README')
+&lt;_io.TextIOWrapper name='README' mode='r' encoding='UTF-8'&gt;
+</pre>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1436965139003256">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-07-15T07%3A58%3A59-05%3A00&amp;precision=second" title="See timeline at 07/15/15 07:58:59">8 months ago</a> by Tim Graham &lt;timograham@…&gt;
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+In <a class="changeset" href="/changeset/c96f11257baf43188ff9daeddab3221992925c85" title="Refs #24121 -- Added meaningful repr() to HttpResponse and subclasses.">c96f112</a>:<br />
+</p>
+<div class="message"><p>
+Refs <a class="new ticket" href="/ticket/24121" title="New feature: Provide a better repr() experience (new)">#24121</a> -- Added meaningful repr() to HttpResponse and subclasses.<br />
+</p>
+</div>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1441051464438895">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-08-31T15%3A04%3A24-05%3A00&amp;precision=second" title="See timeline at 08/31/15 15:04:24">7 months ago</a> by Tim Graham &lt;timograham@…&gt;
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+In <a class="changeset" href="/changeset/9c40f01a66bd15457e10a0bbf28c803968b5dabb" title="Refs #24121 -- Added repr() to LazySettings, Settings, and ...">9c40f01a</a>:<br />
+</p>
+<div class="message"><p>
+Refs <a class="new ticket" href="/ticket/24121" title="New feature: Provide a better repr() experience (new)">#24121</a> -- Added repr() to LazySettings, Settings, and UserSettingsHolder.<br />
+</p>
+</div>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1441051721735455">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-08-31T15%3A08%3A41-05%3A00&amp;precision=second" title="See timeline at 08/31/15 15:08:41">7 months ago</a> by Tim Graham &lt;timograham@…&gt;
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+In <a class="changeset" href="/changeset/d4b10a725614322769a419180039771634a06571" title="Refs #24121 -- Added a repr() to gis.GeoIP and gis.GeoIP2.">d4b10a72</a>:<br />
+</p>
+<div class="message"><p>
+Refs <a class="new ticket" href="/ticket/24121" title="New feature: Provide a better repr() experience (new)">#24121</a> -- Added a repr() to gis.GeoIP and gis.GeoIP2.<br />
+</p>
+</div>
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/24121?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/24121?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/24121?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

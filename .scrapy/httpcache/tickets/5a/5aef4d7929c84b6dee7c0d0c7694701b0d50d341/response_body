@@ -1,0 +1,2596 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      Custom Query – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/query?status=!closed&amp;format=rss&amp;desc=1&amp;order=id" type="application/rss+xml" class="rss" title="RSS Feed" /><link rel="alternate" href="/query?status=!closed&amp;format=csv&amp;page=8&amp;desc=1&amp;order=id" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/query?status=!closed&amp;format=tab&amp;page=8&amp;desc=1&amp;order=id" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" />
+        <link rel="next" href="/query?status=!closed&amp;page=9&amp;desc=1&amp;order=id" title="Next Page" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/report.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/jquery-ui/jquery-ui.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/jquery-ui-addons.css" type="text/css" />
+        <link rel="prev" href="/query?status=!closed&amp;page=7&amp;desc=1&amp;order=id" title="Previous Page" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var properties={"cc":{"label":"Cc","type":"text"},"changetime":{"label":"Modified","type":"time"},"component":{"label":"Component","options":["contrib.admin","contrib.admindocs","contrib.auth","contrib.contenttypes","contrib.flatpages","contrib.humanize","contrib.messages","contrib.postgres","contrib.redirects","contrib.sessions","contrib.sitemaps","contrib.sites","contrib.staticfiles","contrib.syndication","Core (Cache system)","Core (Mail)","Core (Management commands)","Core (Other)","Core (Serialization)","Core (System checks)","Core (URLs)","CSRF","Database layer (models, ORM)","Documentation","Error reporting","File uploads/storage","Forms","Generic views","GIS","HTTP handling","Internationalization","Migrations","Packaging","Template system","Testing framework","Uncategorized","Utilities"],"type":"select"},"description":{"label":"Description","type":"textarea"},"easy":{"label":"Easy pickings","type":"checkbox"},"has_patch":{"label":"Has patch","type":"checkbox"},"id":{"label":"Ticket","type":"id"},"keywords":{"label":"Keywords","type":"text"},"needs_better_patch":{"label":"Patch needs improvement","type":"checkbox"},"needs_docs":{"label":"Needs documentation","type":"checkbox"},"needs_tests":{"label":"Needs tests","type":"checkbox"},"owner":{"label":"Owner","type":"text"},"reporter":{"label":"Reporter","type":"text"},"resolution":{"label":"Resolution","options":["fixed","invalid","wontfix","duplicate","worksforme","needsinfo"],"type":"radio"},"severity":{"label":"Severity","options":["Normal","Release blocker"],"type":"select"},"stage":{"label":"Triage Stage","options":["Unreviewed","Accepted","Ready for checkin","Someday/Maybe"],"type":"select"},"status":{"label":"Status","options":["assigned","closed","new"],"type":"radio"},"summary":{"label":"Summary","type":"text"},"time":{"label":"Created","type":"time"},"type":{"label":"Type","options":["Uncategorized","Bug","New feature","Cleanup/optimization"],"type":"select"},"ui_ux":{"label":"UI/UX","type":"checkbox"},"version":{"label":"Version","options":["master","1.9","1.8"],"type":"select"}};
+      var jquery_ui={"ampm":false,"date_format":"mm/dd/y","day_names":{"abbreviated":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],"narrow":["Su","Mo","Tu","We","Th","Fr","Sa"],"wide":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]},"default_timezone":"-05:00","first_week_day":0,"month_names":{"abbreviated":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wide":["January","February","March","April","May","June","July","August","September","October","November","December"]},"period_names":{"am":["AM","AM"],"pm":["PM","PM"]},"show_timezone":false,"time_format":"hh:mm:ss","timepicker_separator":" ","timezone_iso8601":false,"timezone_list":["-05:00"]};
+      var modes={"id":[{"name":"is","value":""},{"name":"is not","value":"!"}],"select":[{"name":"is","value":""},{"name":"is not","value":"!"}],"text":[{"name":"contains","value":"~"},{"name":"doesn't contain","value":"!~"},{"name":"begins with","value":"^"},{"name":"ends with","value":"$"},{"name":"is","value":""},{"name":"is not","value":"!"}],"textarea":[{"name":"contains","value":"~"},{"name":"doesn't contain","value":"!~"}]};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery-ui.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery-ui-addons.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery-ui-i18n.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/query.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/folding.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        initializeFilters();
+        $("#group").change(function() {
+          $("#groupdesc").enable(this.selectedIndex != 0)
+        }).change();
+        $("fieldset legend.foldable").enableFolding(false);
+      /*<![CDATA[*/
+        /* Hide the filters for saved queries. */
+        if (window.location.href.search(/[?&]report=[0-9]+/) != -1)
+          $("#filters").toggleClass("collapsed");
+      /*]]>*/
+        /* Hide the columns by default. */
+        $("#columns").toggleClass("collapsed");
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <hr />
+      </div>
+    <div id="content" class="query">
+      <h1>Custom Query <span class="numrows">(1236 matches)</span></h1>
+      <form id="query" method="post" action="/query"><div><input type="hidden" name="__FORM_TOKEN" value="86f03ce981347951a3c76eae" /></div>
+        <fieldset id="filters">
+          <legend class="foldable">Filters</legend>
+          <table summary="Query filters">
+            <tbody>
+              <tr style="display: none">
+                <td>
+                  <div class="trac-clause-lsep"> <hr /></div>
+                  <div class="trac-clause-msep">Or</div>
+                  <div class="trac-clause-rsep"> <hr /></div>
+                </td>
+              </tr>
+              <tr><td class="trac-clause">
+                <table class="trac-clause">
+                  <tbody>
+                    <tr class="status">
+                      <td>
+                        <div class="inlinebuttons">
+                          <input type="submit" name="rm_filter_0_status_0" value="–" />
+                        </div>
+                      </td>
+                          <th scope="row"><label id="label_0_status">Status</label></th>
+                      <td class="filter" colspan="2">
+                            <input type="checkbox" id="_0_status_assigned" name="0_status" value="assigned" checked="checked" />
+                            <label for="_0_status_assigned" class="control">assigned</label>
+                            <input type="checkbox" id="_0_status_closed" name="0_status" value="closed" />
+                            <label for="_0_status_closed" class="control">closed</label>
+                            <input type="checkbox" id="_0_status_new" name="0_status" value="new" checked="checked" />
+                            <label for="_0_status_new" class="control">new</label>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tbody>
+                    <tr class="actions">
+                      <td class="and" colspan="2">
+                         <label for="add_filter_0">And</label> 
+                        <select name="add_filter_0" id="add_filter_0">
+                          <option></option>
+                          <option value="cc">Cc</option><option value="component">Component</option><option value="time">Created</option><option value="description">Description</option><option value="easy">Easy pickings</option><option value="has_patch">Has patch</option><option value="keywords">Keywords</option><option value="changetime">Modified</option><option value="needs_docs">Needs documentation</option><option value="needs_tests">Needs tests</option><option value="owner">Owner</option><option value="needs_better_patch">Patch needs improvement</option><option value="reporter">Reporter</option><option value="resolution">Resolution</option><option value="severity">Severity</option><option value="status" disabled="disabled">Status</option><option value="summary">Summary</option><option value="id">Ticket</option><option value="stage">Triage Stage</option><option value="type">Type</option><option value="ui_ux">UI/UX</option><option value="version">Version</option>
+                        </select>
+                        <div class="inlinebuttons">
+                          <input type="submit" name="add_0" value="+" />
+                        </div>
+                      </td>
+                      <td class="or" colspan="2">
+                        <label for="add_clause">Or</label> 
+                        <select name="add_clause_1" id="add_clause">
+                          <option></option>
+                          <option value="cc">Cc</option><option value="component">Component</option><option value="time">Created</option><option value="description">Description</option><option value="easy">Easy pickings</option><option value="has_patch">Has patch</option><option value="keywords">Keywords</option><option value="changetime">Modified</option><option value="needs_docs">Needs documentation</option><option value="needs_tests">Needs tests</option><option value="owner">Owner</option><option value="needs_better_patch">Patch needs improvement</option><option value="reporter">Reporter</option><option value="resolution">Resolution</option><option value="severity">Severity</option><option value="status">Status</option><option value="summary">Summary</option><option value="id">Ticket</option><option value="stage">Triage Stage</option><option value="type">Type</option><option value="ui_ux">UI/UX</option><option value="version">Version</option>
+                        </select>
+                        <div class="inlinebuttons">
+                          <input type="submit" name="add_1" value="+" />
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td></tr>
+            </tbody>
+          </table>
+        </fieldset>
+        <fieldset id="columns">
+          <legend class="foldable">Columns</legend>
+          <div>
+              <label>
+                <input type="checkbox" name="col" value="summary" checked="checked" />
+                Summary
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="status" checked="checked" />
+                Status
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="owner" checked="checked" />
+                Owner
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="type" checked="checked" />
+                Type
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="component" checked="checked" />
+                Component
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="version" checked="checked" />
+                Version
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="severity" />
+                Severity
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="resolution" />
+                Resolution
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="time" />
+                Created
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="changetime" />
+                Modified
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="stage" />
+                Triage Stage
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="has_patch" />
+                Has patch
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="needs_docs" />
+                Needs documentation
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="needs_tests" />
+                Needs tests
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="needs_better_patch" />
+                Patch needs improvement
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="easy" />
+                Easy pickings
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="ui_ux" />
+                UI/UX
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="reporter" />
+                Reporter
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="keywords" />
+                Keywords
+              </label>
+              <label>
+                <input type="checkbox" name="col" value="cc" />
+                Cc
+              </label>
+          </div>
+        </fieldset>
+        <p class="option">
+          <label for="group">Group results by</label>
+          <select name="group" id="group">
+            <option></option>
+              <option value="component">Component</option>
+              <option value="owner">Owner</option>
+              <option value="reporter">Reporter</option>
+              <option value="resolution">Resolution</option>
+              <option value="severity">Severity</option>
+              <option value="status">Status</option>
+              <option value="stage">Triage Stage</option>
+              <option value="type">Type</option>
+              <option value="version">Version</option>
+          </select>
+          <input type="checkbox" name="groupdesc" id="groupdesc" />
+          <label for="groupdesc">descending</label>
+        </p>
+        <p class="option">
+          Show under each result:
+            <label><input type="checkbox" name="row" value="description" />
+            Description</label>
+        </p>
+        <p class="option">
+          <label for="max">Max items per page</label>
+          <input type="text" name="max" id="max" size="10" value="100" />
+        </p>
+        <div class="buttons">
+          <input type="hidden" name="order" value="id" />
+          <input type="hidden" name="desc" value="1" />
+          <input type="submit" name="update" value="Update" />
+        </div>
+        <hr />
+      </form>
+      <div>
+  <h2 class="report-result">
+    Results <span class="numresults">(701 - 800 of 1236)</span>
+  </h2>
+  <div class="paging">
+    <span class="previous">
+      <a href="/query?status=!closed&amp;page=7&amp;desc=1&amp;order=id" title="Previous Page">←</a>
+    </span>
+      <span>
+        <a href="/query?status=!closed&amp;desc=1&amp;order=id" title="Page 1">1</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=2&amp;desc=1&amp;order=id" title="Page 2">2</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=3&amp;desc=1&amp;order=id" title="Page 3">3</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=4&amp;desc=1&amp;order=id" title="Page 4">4</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=5&amp;desc=1&amp;order=id" title="Page 5">5</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=6&amp;desc=1&amp;order=id" title="Page 6">6</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=7&amp;desc=1&amp;order=id" title="Page 7">7</a>
+      </span>
+      <span>
+        <span class="current">8</span>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=9&amp;desc=1&amp;order=id" title="Page 9">9</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=10&amp;desc=1&amp;order=id" title="Page 10">10</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=11&amp;desc=1&amp;order=id" title="Page 11">11</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=12&amp;desc=1&amp;order=id" title="Page 12">12</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=13&amp;desc=1&amp;order=id" title="Page 13">13</a>
+      </span>
+    <span class="next">
+      <a href="/query?status=!closed&amp;page=9&amp;desc=1&amp;order=id" title="Next Page">→</a>
+    </span>
+</div>
+  <table class="listing tickets">
+    <thead>
+    <tr class="trac-columns">
+      <th class="id desc">
+        <a title="Sort by Ticket (ascending)" href="/query?status=!closed&amp;page=8&amp;order=id">Ticket</a>
+      </th><th class="summary">
+        <a title="Sort by Summary (ascending)" href="/query?status=!closed&amp;page=8&amp;order=summary">Summary</a>
+      </th><th class="status">
+        <a title="Sort by Status (ascending)" href="/query?status=!closed&amp;page=8&amp;order=status">Status</a>
+      </th><th class="owner">
+        <a title="Sort by Owner (ascending)" href="/query?status=!closed&amp;page=8&amp;order=owner">Owner</a>
+      </th><th class="type">
+        <a title="Sort by Type (ascending)" href="/query?status=!closed&amp;page=8&amp;order=type">Type</a>
+      </th><th class="component">
+        <a title="Sort by Component (ascending)" href="/query?status=!closed&amp;page=8&amp;order=component">Component</a>
+      </th><th class="version">
+        <a title="Sort by Version (ascending)" href="/query?status=!closed&amp;page=8&amp;order=version">Version</a>
+      </th>
+    </tr>
+    </thead>
+      <tbody>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19878" title="View ticket">#19878</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19878" title="View ticket">Stop TemplateView automatically passing kwargs into the context</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Generic views
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19842" title="View ticket">#19842</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19842" title="View ticket">annotate()-based solution to distinct and order_by problem</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      avani9330
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19806" title="View ticket">#19806</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19806" title="View ticket">django_bash_completion clobbers upstream completion of ‘python’</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Core (Management commands)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19755" title="View ticket">#19755</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19755" title="View ticket">Incremental filter</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      suligap
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19726" title="View ticket">#19726</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19726" title="View ticket">Ordering on booleans works different with SQLite and Postgres</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19721" title="View ticket">#19721</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19721" title="View ticket">Django admin allows filtering using the field lookups such as "in", but it is impossible to include a value that contains a comma</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19710" title="View ticket">#19710</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19710" title="View ticket">ModelAdmin exclude behaviour not consistent with ModelAdmin behaviour</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19705" title="View ticket">#19705</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19705" title="View ticket">CommonMiddleware handles If-None-Match incorrectly</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      syphar
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      HTTP handling
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19670" title="View ticket">#19670</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19670" title="View ticket">CachedFilesMixin Doesn't Limit Substitutions to Extension Matches</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.staticfiles
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19649" title="View ticket">#19649</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19649" title="View ticket">Cookie message storage does not set Vary: Cookie</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      HTTP handling
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19580" title="View ticket">#19580</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19580" title="View ticket">Unify reverse foreign key and m2m querying behavior</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19567" title="View ticket">#19567</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19567" title="View ticket">Make javascript i18n view as CBV and more extensible.</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      claudep
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Internationalization
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19544" title="View ticket">#19544</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19544" title="View ticket">IntegrityError during Many To Many add()</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19528" title="View ticket">#19528</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19528" title="View ticket">CachedFilesMixin does not rewrite rules for css selector with path</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      jnovinger
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.staticfiles
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19527" title="View ticket">#19527</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19527" title="View ticket">Allow QuerySet.bulk_create() to set the primary key of its objects</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19515" title="View ticket">#19515</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19515" title="View ticket">Increase the max_length of Redirect.old_path/new_path</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      saulshanabrook
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      contrib.redirects
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19513" title="View ticket">#19513</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19513" title="View ticket">update() after annotate(val=Sum(...)) crashes on PostgreSQL &amp; Oracle</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19493" title="View ticket">#19493</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19493" title="View ticket">annotate(Count()) does not work properly with django.db.backends.oracle</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19415" title="View ticket">#19415</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19415" title="View ticket">Clarify how aggregates work with multi-valued relationships and multiple filter() calls</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19396" title="View ticket">#19396</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19396" title="View ticket">Allow customized ModelState classes</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19303" title="View ticket">#19303</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19303" title="View ticket">ModelAdmin.formfield_overrides is ignored for fields with choices</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      LukaszBalcerzak
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19255" title="View ticket">#19255</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19255" title="View ticket">BaseGenericInlineFormSet runs validation methods before linking form instances to their related object</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      arielpontes
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.contenttypes
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19235" title="View ticket">#19235</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19235" title="View ticket">Admin actions displayed as buttons instead of drop-down list</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      marpetr
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19227" title="View ticket">#19227</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19227" title="View ticket">Reorganize method flowchart for class based generic views to tree</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      jambonrose
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19222" title="View ticket">#19222</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19222" title="View ticket">Documentation for use_for_related_fields should clarify that it doesn't work for intermediate joins</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19221" title="View ticket">#19221</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19221" title="View ticket">Check that cache keys are string</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Core (Cache system)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19215" title="View ticket">#19215</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19215" title="View ticket">ImageField's “Currently” and “Clear” Sometimes Don't Appear</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      mcardillo55@…
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Forms
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19201" title="View ticket">#19201</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19201" title="View ticket">session data should always contain the expiry date</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      contrib.sessions
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19159" title="View ticket">#19159</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19159" title="View ticket">loaddata reports DeserializationError instead of MemoryError</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Core (Serialization)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19149" title="View ticket">#19149</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19149" title="View ticket">Generic Relation not cascading with Multi table inheritance.</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      nicolas
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/19106" title="View ticket">#19106</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19106" title="View ticket">Add new tutorial on breaking templates into blocks</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/19040" title="View ticket">#19040</a></td>
+                    <td class="summary">
+                      <a href="/ticket/19040" title="View ticket">Allow declaring a model Manager class inside the model class</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18995" title="View ticket">#18995</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18995" title="View ticket">String formatting error when passing floats as values in {% blocktrans %} tags</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Internationalization
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18957" title="View ticket">#18957</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18957" title="View ticket">Add next/previous buttons when editing a model in the admin site</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18937" title="View ticket">#18937</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18937" title="View ticket">Use modern Python packaging metadata standard (1.2, PEP 345)</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Packaging
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18929" title="View ticket">#18929</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18929" title="View ticket">CachedFilesMixin is not compatible with S3BotoStorage</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.staticfiles
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18914" title="View ticket">#18914</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18914" title="View ticket">Add a way to add items to the admin's object tools using Python code</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      auvipy
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18887" title="View ticket">#18887</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18887" title="View ticket">LineString array method (property) returns different data type without and with NumPy installed</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      sir-sigurd
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      GIS
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18879" title="View ticket">#18879</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18879" title="View ticket">FilteredSelectMultiple loses data</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18855" title="View ticket">#18855</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18855" title="View ticket">persist a socket across reloads of the dev server</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      dlamotte
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      HTTP handling
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18844" title="View ticket">#18844</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18844" title="View ticket">Allow Oracle DatabaseWrapper to support session options extra kwargs as settings.DATABASE_OPTIONS</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18830" title="View ticket">#18830</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18830" title="View ticket">FormWizard with Formset and Form Fields mixed on same page</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      inglesp
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Forms
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18763" title="View ticket">#18763</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18763" title="View ticket">Shortcut to get users by permission</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      Osmose
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.auth
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18736" title="View ticket">#18736</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18736" title="View ticket">Flexible filters for django admin</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18729" title="View ticket">#18729</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18729" title="View ticket">Admin changelist view defaults to `DISTINCT`, unusable on reasonably sized databases</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      AlexMalek
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18726" title="View ticket">#18726</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18726" title="View ticket">Combination of F() expression with query seems to confuse sql compiler's table aliases</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18717" title="View ticket">#18717</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18717" title="View ticket">Setting attributes on deferred objects should trigger field's descriptor's __set__()</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      shaz
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18707" title="View ticket">#18707</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18707" title="View ticket">Test client doesn't allow testing 500 responses content</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Testing framework
+                    </td>
+                    <td class="version">
+                      1.6
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18682" title="View ticket">#18682</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18682" title="View ticket">Make the deletion of stale content types safer</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      contrib.contenttypes
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18669" title="View ticket">#18669</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18669" title="View ticket">QuerySet.bulk_create should batch if no AutoField</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      jdunck
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18665" title="View ticket">#18665</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18665" title="View ticket">Making it easier to customize Django Admin</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18655" title="View ticket">#18655</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18655" title="View ticket">Media files should be served using file storage API</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      File uploads/storage
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18654" title="View ticket">#18654</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18654" title="View ticket">Support for model properties that are not fields in LayerMapping</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      GIS
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18631" title="View ticket">#18631</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18631" title="View ticket">A way to get handle to the generated query for terminal queryset methods</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18620" title="View ticket">#18620</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18620" title="View ticket">Prefer current Site when checking M2M in "shortcut"/"view_on_site" redirect</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      contrib.contenttypes
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18615" title="View ticket">#18615</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18615" title="View ticket">Allow retrieval of the signature age using the signing API</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Core (Other)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18603" title="View ticket">#18603</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18603" title="View ticket">Adding support for PEP 302 importers</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Core (Other)
+                    </td>
+                    <td class="version">
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18599" title="View ticket">#18599</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18599" title="View ticket">GenericForeignKey field can't be set on init of model</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.contenttypes
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18597" title="View ticket">#18597</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18597" title="View ticket">`BaseInlineFormSet` should attempt to get it's queryset from it's instance related manager before falling back to it's model's default manager</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Forms
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18596" title="View ticket">#18596</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18596" title="View ticket">Documentation of javascript_catalog isn't very clear</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18580" title="View ticket">#18580</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18580" title="View ticket">Avoiding SQLite update+annotations "only a single result allowed for a SELECT that is part of an expression"</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18565" title="View ticket">#18565</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18565" title="View ticket">Point object doesn't work in queyset.extra params argument</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      GIS
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18549" title="View ticket">#18549</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18549" title="View ticket">Admin should not use verbose_name_plural for OneToOne field</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      vanessagomes
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18543" title="View ticket">#18543</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18543" title="View ticket">Non image file can be saved to ImageField</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      deprince
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18514" title="View ticket">#18514</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18514" title="View ticket">Syncdb + Oracle + custom table name with quotes = Oracle 01741 error</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.2
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18485" title="View ticket">#18485</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18485" title="View ticket">Document behavior of PostgreSQL/Oracle when manually setting autoincrementing fields</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18427" title="View ticket">#18427</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18427" title="View ticket">limit_choices_to won't limit correctly</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18394" title="View ticket">#18394</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18394" title="View ticket">Better docs, and possibly better handling, for 'packages' argument to javascript_catalog</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Internationalization
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18392" title="View ticket">#18392</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18392" title="View ticket">Use utf8mb4 encoding with MySQL 5.5</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18378" title="View ticket">#18378</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18378" title="View ticket">Q() combined with annotate() can produce bad SQL</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18357" title="View ticket">#18357</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18357" title="View ticket">BaseGenericInlineFormSet in Django Admin does not set generic foreign key fields when constructing form</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.contenttypes
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18348" title="View ticket">#18348</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18348" title="View ticket">Make parts of the sessions API public</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18332" title="View ticket">#18332</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18332" title="View ticket">No generic way to get database backend version</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      vanessagomes
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18305" title="View ticket">#18305</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18305" title="View ticket">force_update/force_insert not passed up the inheritance chain in .save()</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18296" title="View ticket">#18296</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18296" title="View ticket">Make creating apps inside project folder more intuitive with manage.py startapp command</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      vanessagomes
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Core (Management commands)
+                    </td>
+                    <td class="version">
+                      1.5
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18283" title="View ticket">#18283</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18283" title="View ticket">FileField should not reuse FieldFiles</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      trg
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18243" title="View ticket">#18243</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18243" title="View ticket">Management shell should make it easy to force LOGGING_CONFIG=None</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Core (Management commands)
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18174" title="View ticket">#18174</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18174" title="View ticket">Model inheritance pointers doesn't refer to parent to refer to grandparents</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18150" title="View ticket">#18150</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18150" title="View ticket">Uploading a file ending with a backslash fails</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      supersteve9219
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      File uploads/storage
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18148" title="View ticket">#18148</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18148" title="View ticket">django.contrib.sites.managers.CurrentSiteManager should be able to span multiple models</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.sites
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18119" title="View ticket">#18119</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18119" title="View ticket">add DomainNameValidator to validate Internet Domain Names</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Core (Other)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18105" title="View ticket">#18105</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18105" title="View ticket">Investigate possible misuse of Context</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Template system
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18100" title="View ticket">#18100</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18100" title="View ticket">Deleting model instances with deferred fields don't trigger deletion signals</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      charettes
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18098" title="View ticket">#18098</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18098" title="View ticket">order_with_respect_to should construct set_RELATED_order() method name from related_name</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/18096" title="View ticket">#18096</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18096" title="View ticket">Overiding delete permissions in the Admin</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/18088" title="View ticket">#18088</a></td>
+                    <td class="summary">
+                      <a href="/ticket/18088" title="View ticket">Add a "supports_foreign_key" database feature to ease testing</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      Testing framework
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17990" title="View ticket">#17990</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17990" title="View ticket">Distinct + Random + Postgres = Bug</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17985" title="View ticket">#17985</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17985" title="View ticket">Add documentation for the lookup_allowed method</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Documentation
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17975" title="View ticket">#17975</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17975" title="View ticket">Make sessions more robust</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Cleanup/optimization
+                    </td>
+                    <td class="component">
+                      contrib.sessions
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17962" title="View ticket">#17962</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17962" title="View ticket">Django Admin delete_view could benefit from extension points</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17955" title="View ticket">#17955</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17955" title="View ticket">Uploading a file without using django forms</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      HTTP handling
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17943" title="View ticket">#17943</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17943" title="View ticket">Too many open file descriptors while using memcache</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      haxoza
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Core (Cache system)
+                    </td>
+                    <td class="version">
+                      1.4
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17930" title="View ticket">#17930</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17930" title="View ticket">Error in Queryset with operator | (union queryset) + slice</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17905" title="View ticket">#17905</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17905" title="View ticket">Admin documentation lists all models, even for users without access to certain applications</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      gszczepanczyk
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admindocs
+                    </td>
+                    <td class="version">
+                      1.4-alpha-1
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17904" title="View ticket">#17904</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17904" title="View ticket">Custom permissions on proxy model no longer created</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.auth
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17881" title="View ticket">#17881</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17881" title="View ticket">Implement BaseModelAdmin.get_raw_id_fields, similar to get_readonly_fields</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      contrib.admin
+                    </td>
+                    <td class="version">
+                      1.4-beta-1
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17854" title="View ticket">#17854</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17854" title="View ticket">Add database-specific checks for the maximum supported values of DecimalField max_digits, decimal_places</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Core (System checks)
+                    </td>
+                    <td class="version">
+                      master
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17834" title="View ticket">#17834</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17834" title="View ticket">ETag generated from empty content can break http caching</a>
+                    </td>
+                    <td class="status">
+                      assigned
+                    </td>
+                    <td class="owner">
+                      dwightgunning
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      HTTP handling
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+              <tr class="even prio">
+                    <td class="id"><a href="/ticket/17814" title="View ticket">#17814</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17814" title="View ticket">Add a way to override related_name on models that you can't edit</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      New feature
+                    </td>
+                    <td class="component">
+                      Database layer (models, ORM)
+                    </td>
+                    <td class="version">
+                    </td>
+              </tr>
+              <tr class="odd prio">
+                    <td class="id"><a href="/ticket/17792" title="View ticket">#17792</a></td>
+                    <td class="summary">
+                      <a href="/ticket/17792" title="View ticket">pickled object's __setstate__() ignores exceptions</a>
+                    </td>
+                    <td class="status">
+                      new
+                    </td>
+                    <td class="owner">
+                      nobody
+                    </td>
+                    <td class="type">
+                      Bug
+                    </td>
+                    <td class="component">
+                      contrib.sessions
+                    </td>
+                    <td class="version">
+                      1.3
+                    </td>
+              </tr>
+      </tbody>
+  </table>
+  <div class="paging">
+    <span class="previous">
+      <a href="/query?status=!closed&amp;page=7&amp;desc=1&amp;order=id" title="Previous Page">←</a>
+    </span>
+      <span>
+        <a href="/query?status=!closed&amp;desc=1&amp;order=id" title="Page 1">1</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=2&amp;desc=1&amp;order=id" title="Page 2">2</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=3&amp;desc=1&amp;order=id" title="Page 3">3</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=4&amp;desc=1&amp;order=id" title="Page 4">4</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=5&amp;desc=1&amp;order=id" title="Page 5">5</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=6&amp;desc=1&amp;order=id" title="Page 6">6</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=7&amp;desc=1&amp;order=id" title="Page 7">7</a>
+      </span>
+      <span>
+        <span class="current">8</span>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=9&amp;desc=1&amp;order=id" title="Page 9">9</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=10&amp;desc=1&amp;order=id" title="Page 10">10</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=11&amp;desc=1&amp;order=id" title="Page 11">11</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=12&amp;desc=1&amp;order=id" title="Page 12">12</a>
+      </span>
+      <span>
+        <a href="/query?status=!closed&amp;page=13&amp;desc=1&amp;order=id" title="Page 13">13</a>
+      </span>
+    <span class="next">
+      <a href="/query?status=!closed&amp;page=9&amp;desc=1&amp;order=id" title="Next Page">→</a>
+    </span>
+</div>
+</div>
+      <div id="trac-report-buttons" class="buttons">
+      </div>
+      <div id="help"><strong>Note:</strong> See <a href="/wiki/TracQuery">TracQuery</a>
+        for help on using queries.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/query?status=!closed&amp;format=rss&amp;desc=1&amp;order=id" class="rss">RSS Feed</a>
+        </li><li>
+          <a rel="nofollow" href="/query?status=!closed&amp;format=csv&amp;page=8&amp;desc=1&amp;order=id" class="csv">Comma-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/query?status=!closed&amp;format=tab&amp;page=8&amp;desc=1&amp;order=id" class="tab">Tab-delimited Text</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

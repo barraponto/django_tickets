@@ -1,0 +1,714 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #20287 (BaseContext (and it's subclasses) lack emulation of dictionary items())
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/20286" title="Ticket #20286" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/20287?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/20287?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/20287?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/20288" title="Ticket #20288" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/20286" title="Ticket #20286">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/20288" title="Ticket #20288">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2013-04-18T14%3A52%3A24-05%3A00&amp;precision=second" title="See timeline at 04/18/13 14:52:24">3 years ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2013-09-22T03%3A42%3A44-05%3A00&amp;precision=second" title="See timeline at 09/22/13 03:42:44">2 years ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/20287" class="trac-id">#20287</a>
+    <span class="trac-status">
+      <a href="/query?status=assigned">assigned</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">BaseContext (and it's subclasses) lack emulation of dictionary items()</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable">Keryn Knight &lt;django@…&gt;</td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=cannona">cannona</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Template+system">Template system</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              bmispelon@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=1">yes</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=1">yes</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+Given the Context usually behaves like a dictionary (though underlying it is obviously also a stack), I was somewhat surprised that it has no <tt>items()</tt> nor <tt>iteritems()</tt> methods that would allow it to be iterated as one might expect to, though it does have an <tt>__iter__()</tt> method, which could probably be used if this has any merit.<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+    <div id="attachments">
+        <h3 class="foldable">Attachments <span class="trac-count">(1)</span></h3>
+        <div class="attachments">
+          <dl class="attachments">
+              <dt>
+    <a href="/attachment/ticket/20287/20287.patch" title="View attachment">20287.patch</a><a href="/raw-attachment/ticket/20287/20287.patch" class="trac-rawlink" title="Download">​</a>
+       (<span title="2523 bytes">2.5 KB</span>) -
+      added by <em>cannona</em> <a class="timeline" href="/timeline?from=2013-05-15T07%3A29%3A15-05%3A00&amp;precision=second" title="See timeline at 05/15/13 07:29:15">3 years ago</a>.
+  </dt>
+              <dd>
+                First stab at a patch.
+              </dd>
+          </dl>
+          <p>
+            Download all attachments as: <a rel="nofollow" href="/zip-attachment/ticket/20287/">.zip</a>
+          </p>
+          
+        </div>
+    </div>
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(10)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1366316873688174">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-18T15%3A27%3A53-05%3A00&amp;precision=second" title="See timeline at 04/18/13 15:27:53">3 years ago</a> by bmispelon
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>bmispelon@…</em> added
+    </li><li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li><li class="trac-field-type">
+      <strong class="trac-field-type">Type</strong>
+        changed from <em>Uncategorized</em> to <em>New feature</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Since <tt>BaseContext</tt> is basically a <tt>ChainMap</tt> <a class="changeset" href="/changeset/1/">[1]</a>, I'd be +1 on the idea, but do you have an example showing how this feature might be useful?<br />
+</p>
+<p>
+<a class="changeset" href="/changeset/1/">[1]</a> <a class="ext-link" href="http://docs.python.org/3/library/collections.html#chainmap-objects"><span class="icon">​</span>http://docs.python.org/3/library/collections.html#chainmap-objects</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1366318489623930">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-18T15%3A54%3A49-05%3A00&amp;precision=second" title="See timeline at 04/18/13 15:54:49">3 years ago</a> by Keryn Knight &lt;django@…&gt;
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I actually sort of do! Though it is arguably a quirk that has needed fixing for years at the <strong>debug_toolbar</strong> end too, and I'm tempted to file a bug there additionally, having finally sat down and figured (some of?) the problem out, accidentally, having been inspired to investigate when I was playing around with some code in a <tt>pdb</tt> session and tried to iterate over my context, and it threw an exception because the method I guessed would be there, wasn't.<br />
+</p>
+<p>
+In the template panel for debug_toolbar, it explicitly checks each <tt>context_layer</tt> (that is, each <tt>dict</tt> inside of the <tt>Context.dicts</tt>) if it <tt>hasattr('items')</tt> before iterating it, as a seemingly innocuous guard. One way in which the problem arises is once you are carrying around a <tt>Context</tt>, where one of the layers/dicts itself is a <tt>Context</tt> ... this admittedly is probably not an intended feature, but it works anyway because the inner context also emulates dictionary key/value pairs. Debug toolbar can no longer iterate and print that part of the template context, because it doesn't really know about bits of it (treats it as <tt>{}</tt>). This is especially apparent in things like <strong>django-CMS</strong>, where plugins will often render entirely without a context according to the debug_toolbar panel, because of the way contexts are used.<br />
+</p>
+<p>
+Basically though, any code which depends on, or makes assumptions about each Context dict being an actual-dict may fall over in such cases, but this is the only real world case for supporting more dictionary-like usage, in my experience.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1366649690033307">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-22T11%3A54%3A50-05%3A00&amp;precision=second" title="See timeline at 04/22/13 11:54:50">3 years ago</a> by bmispelon
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Marking this as <tt>Accepted</tt>. It seems like a reasonable feature to add.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1366745126488381">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-23T14%3A25%3A26-05%3A00&amp;precision=second" title="See timeline at 04/23/13 14:25:26">3 years ago</a> by bmispelon
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+For reference, <a class="new ticket" href="/ticket/18105" title="Cleanup/optimization: Investigate possible misuse of Context (new)">#18105</a> seems related.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1368542263788698">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-05-14T09%3A37%3A43-05%3A00&amp;precision=second" title="See timeline at 05/14/13 09:37:43">3 years ago</a> by cannona
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I'm a bit confused on what <span class="underline">iterkeys</span> and the like should output.  My first guess would be that it should iterate through the union of all the keys of the dictionaries in the stack of dicts, (I.E. no duplicate keys).  <span class="underline">itervalues</span> should return the same value as calling <span class="underline">getitem</span> would for that particular key.  However, this does not seem to jive with what <span class="underline">itter</span> is yielding, which is each dictionary in the stack of dicts.<br />
+</p>
+<p>
+Does it make sense to have <span class="underline">iter</span> return one thing, while <span class="underline">itervalues</span> and <span class="underline">iterkeys</span> returns something entirely different?  My suggestion would be to add all the various basic map methods to iterate over the keys and values as I described at the beginning of this comment, , and changing <span class="underline">iter</span> to match, I.E. it would yield each key and value pair from the stack, where items in later dictionaries in the stack override the earlier ones, and all keys would be returned only once.<br />
+</p>
+<p>
+I'm just not sure if this would be likely to screw up existing code.<br />
+</p>
+<p>
+Implementing <span class="underline">iterkeys</span> and <span class="underline">itervalues</span> and other methods in RenderContext will be quite simple, as they can just proxy to self.dicts[-1].<span class="underline">methodname</span>.  In fact, the get method that's already in there should probably do that as well, rather than rewriting logic already provided.<br />
+</p>
+<p>
+Please let me know if any of the above is not clear.<br />
+</p>
+<p>
+Aaron<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1368542289766262">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-05-14T09%3A38%3A09-05%3A00&amp;precision=second" title="See timeline at 05/14/13 09:38:09">3 years ago</a> by cannona
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-owner">
+      <strong class="trac-field-owner">Owner</strong>
+        changed from <em>nobody</em> to <em>cannona</em>
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>new</em> to <em>assigned</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-7-1368559696953819">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-05-14T14%3A28%3A16-05%3A00&amp;precision=second" title="See timeline at 05/14/13 14:28:16">3 years ago</a> by bmispelon
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Like I mentionned in my first comment, I see <tt>BaseContext</tt> as an early implementation of a <tt>ChainMap</tt>.<br />
+</p>
+<p>
+Since <tt>ChainMap</tt> is python3-only, we can't really use it (yet) directly but I think it'd be good to copy its implementation so that switching to it will be easier when the time comes.<br />
+</p>
+<p>
+Also note that <a class="closed ticket" href="/ticket/20404" title="New feature: Add a keys() method to ContextList (closed: fixed)">#20404</a> is closely related (implementing <tt>.keys()</tt> on context objects.<br />
+</p>
+<p>
+<strong> Edit </strong><br />
+Forget what I said about <a class="closed ticket" href="/ticket/20404" title="New feature: Add a keys() method to ContextList (closed: fixed)">#20404</a>, it's not talking about the same thing at all.<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2013-05-14T14%3A38%3A00-05%3A00&amp;precision=second" title="See timeline at 05/14/13 14:38:00">3 years ago</a>
+        by bmispelon
+      (<a href="/ticket/20287?cversion=0&amp;cnum_hist=7#comment:7">previous</a>)
+      (<a href="/ticket/20287?action=comment-diff&amp;cnum=7&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-05-15T07%3A29%3A15-05%3A00&amp;precision=second" title="See timeline at 05/15/13 07:29:15">3 years ago</a> by cannona
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/20287/20287.patch"><em>20287.patch</em></a><a href="/raw-attachment/ticket/20287/20287.patch" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+First stab at a patch.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1368621154031908">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-05-15T07%3A32%3A34-05%3A00&amp;precision=second" title="See timeline at 05/15/13 07:32:34">3 years ago</a> by cannona
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-has_patch">
+      <strong class="trac-field-has_patch">Has patch</strong>
+        set
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        set
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Any feedback on this patch is welcome.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-9-1379839364052257">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-09-22T03%3A42%3A44-05%3A00&amp;precision=second" title="See timeline at 09/22/13 03:42:44">2 years ago</a> by FunkyBob
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Just noting that currently ChainMap is implemented in python in py3, so it is back-portable to py2 almost verbatim.<br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/20287?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/20287?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/20287?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

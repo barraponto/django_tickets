@@ -1,0 +1,117 @@
+reporter,title
+beckastar,link in new contributor guide is unclear and needs some improvements
+PetrDlouhy,The list_display for CharField doesn't work for None value among choices
+flesser,Improve utils.formats.date_format() error message when using time formatting with datetime.date
+kezabelle,SimpleLazyObject doesn't implement __radd__
+lamby,Support relative imports in django.conf.urls.include
+kartikanand,Pagination module should warn about unordered query set
+inglesp,loaddata cannot deserialize fixtures with forward references and natural foreign keys
+MarkusH,Refactor MigrationLoader.build_graph() to use more of MigrationGraph's features
+jklaiho,Warnings regarding 404s logged for URLs missing trailing slashes
+topher86,"collectstatic --clear throws NotImplementedError, ""This backend doesn't support absolute paths."""
+knyghty,Convert contrib.flatpages views to class-based views
+AlexHill,Memory leak in cached template loader
+aleontiev,Unexpected / duplicated queries on nested Prefetch queryset with repeated model
+BertrandBordage,Deprecate implicit OneToOneField parent_link
+charettes,Rewrite the lazy model reference section of related fields docs
+tomaszn,Add JSON_AGG to contrib.postgres
+wimfeijen,Document the consequences of rotating the CSRF token on login
+sir-sigurd,document django.contrib.gis.utils.ogrinfo
+akaariai,Replace dynamic classes with non-data descriptors for deferred instance loading
+aptiko,Make the SMTP more efficient if an error passes silently when creating a connection
+BertrandBordage,Unable to use custom lookups or transforms in admin `search_fields`
+julianandrews,Altering unique_together still sometimes missing deleted fields
+bartekwojcicki,Squashing migrations with preserve_default=False keeps the default
+Zelvuska,POST to delete protected fk relationship raises ProtectedError
+,HashedFilesMixin.patterns should limit URL matches to their respective filetypes
+russellm,No validation error when ForeignKey related_name clashes with manager name.
+timo,Allow disabling session model database table creation if not used by session engine
+jezdez,Deprecate auto_now and auto_now_add and document alternatives
+,Migration fails when removing explicit primary key (Postgres)
+blueyed,Cleanse entries from request.META in debug views
+shai,Add database-backend-specific checks
+,"Add migrations support for adding ManyToMany ""through"" model"
+,Admin DateField doesn't support all DATE_INPUT_FORMATS
+vvd,QuerySet.only() fail to work with reverse o2o relationships
+carljm,Document limitations of cache middleware more clearly
+areski,_get_FIELD_display doesn't work with Field.get_choices using Iterators
+jonash,BooleanField should not override 'blank' if choices are specified
+shai,Sliced for-update queries do not work on Oracle
+anonymous,Add request attr to user_login_failed signal
+,Empty BinaryField != b'' on Python 2
+meteozond,Add an option to avoid slow date_hierarchy queries on a big tables
+shai,Use a temporary folder to store uploaded files during tests
+eskhool,Fixtures: Natural Key support for Generic Foreign Keys
+aluminiumgeek,"Add support for expressions like (Lower('myfield'),) in model Meta.ordering"
+maciej-pawlisz,Translation of DEFAULT_FROM_EMAIL not working
+jarshwah,Restructure expressions documentation to better highlight ORM support
+ezheidtmann,Can't use PostGIS function ST_OrderingEquals with GeoDjango
+phalt,Email validation for domain `gmail.-com` is considered valid
+reichert,Module level database queries in a project prevent register_hstore from being called
+frankvdp,Make GenericIPAddressField normalize IPv4 addresses
+ad-65,Mistake in model _meta API migration guide for multi-table inheritance
+ecederstrand,Allow skipping IN clause on prefetch queries
+skorokithakis,Excluding an object with no ID excludes everything.
+vtbassmatt,Database function strftime with argument %W fails in 1.9a1
+cdestigter,Modelbase.__new__ causes `AppRegistryNotReady`
+jneves,static template tag outputs invalid HTML if storage class's url() returns a URI with '&' characters.
+tarkatronic,warn about migrations mixing schema- and data- changing operations
+jarshwah,Model instances created with unittest.mock can raise confusing errors
+Sjord,Django test teardown fails when there is no default database
+acatton,Can't count when using annotate(field=RawSQL(sql)) when sql is a constant
+Tuttle,Refactor the admin paginator customizations to make them reuseable
+claudep,Evaluate handle_spheroid removal in get_distance method
+simonphilips,Deferred foreign keys operations fail when the column is changed during the same migration
+davidszotten,JSONField form field double encodes
+borfast,Allow using datetime lookups in QuerySets aggregate calls
+akaariai,Reusing databases doesn't work on PostgreSQL for migrations tests
+timkofu,Clarify docs about preventing duplicate signals
+camiloforero,Autodetector crashes on add/removal of tzinfo from DateTimeField default
+riklaunim,Broken squashmigration when model related to another one gets deleted
+jarshwah,Clean up django.db.models.query._values()
+MounirMesselmeni,Add support for get_foo_display() with ArrayField
+coolRR,Make `django.db.models.Manager.from_queryset` copy over properties and not just methods
+Protosac,Add a feature to programmatically remove stale content types
+dukebody,"Create --update flag for makemigrations management command, mimicking South's one."
+tompecina,Textarea widget has redundant \r\n when writing XHTML
+akaariai,Add process_lhs() method for Transform
+carljm,KeyError when trying to migrate to a replaced migration
+coldmind,makemigrations should create empty migrations dir for any installed app without it
+shaib,Database type NUMERIC with no parameters is not supported
+MarkusH,"Add UUIDField, RangeField, etc to database introspection"
+tsouvarev,Jinja2 rendered templates are not safe by default
+nim65s,Allow SingleObjectTemplateResponseMixin to get a template_name from form_class if it's a ModelForm
+sgallen,SimpleArrayField missing clean method which leads to unexpected validation error.
+SeanHayes,"StaticFilesStorage permits leading slash, CachedStaticFilesStorage doesn't"
+amosonn,ContentTypes population doesn't work with backwards migrations
+scoenye,RendererMixin id_for_label causes HTML id uniqueness violation
+Muty,QuerySet.exclude() crashes when referencing related_qurey_name of GenericRelation
+trecouvr,Failure when using expressions.DateTime on NULL values and aggregating
+srkunze,Cannot order query by constant value on PostgreSQL
+paulcdejean,inspectdb should introspect autofield
+wrwrwr,Allow assertNumQueries to clear caches before it runs
+simondrabble,GIS geometries classes should be deconstructibles.
+benjaoming,Management command dbshell does not use DATABASE[...]['OPTIONS'] to set env PGOPTIONS
+claudep,Remove .mo files from the Django Git repository
+awol,Improve error reporting when loading invalid JSON fixtures
+hirokiky,Discover runner will raise AttributeError when test modules raise ImportError
+ryuusenshi,"Add DatePart db expression to allow complex lookups on date parts (e.g. year, month, day)"
+shaib,Add a friendly error report when using select_related() on a reverse relation
+,"Messages should have an ""expire"" flag"
+vinayan3,DatabaseCache must implement incr to guarantee atomic increment
+mbox,TransactionManagmentError isn't helpful for tracking down cause
+Naddiseo,CircularDependencyError when squashing migrations
+codefisher,Document that F expressions are reapplied each time an object is saved
+avidi,Django uses unnecessary join in concrete inheritance
+danielmenzel,Migrations not found when only .pyc files are available (e.g. in a frozen environment)
+Harper04,Add makemigrations warning for unique fields with callable defaults
+Arfrever,Django installs /usr/bin/django-admin and /usr/bin/django-admin.py
+jarshwah,Hide oracle specific GIS behaviour behind a feature flag
+stephband,Verbatim tag fails to render curly braces
+aaugustin,GenericForeignKey should be indexed
+kutenai,Add deeper bookmarks to Django Docs PDF
+hadisunyoto,remove/add fields programatically in modelform fails in admin
+guettli,Add a way to build URLs with query strings
+akaariai,Allow fields to set join class
+yellowcap,Add spatial lookups to RasterField
+froomzy,MigrationRecorder does not obey db_router allow_migrate rules

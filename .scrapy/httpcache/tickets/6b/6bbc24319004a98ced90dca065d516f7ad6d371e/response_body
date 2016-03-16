@@ -1,0 +1,682 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #23435 (GenericForeignKey should be indexed)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/23434" title="Ticket #23434" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/23435?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/23435?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/23435?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/23436" title="Ticket #23436" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/23434" title="Ticket #23434">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/23436" title="Ticket #23436">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2014-09-06T03%3A51%3A01-05%3A00&amp;precision=second" title="See timeline at 09/06/14 03:51:01">19 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-07-31T13%3A46%3A05-05%3A00&amp;precision=second" title="See timeline at 07/31/15 13:46:05">8 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/23435" class="trac-id">#23435</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=Cleanup%2Foptimization">Cleanup/optimization</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">GenericForeignKey should be indexed</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=aaugustin">aaugustin</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=contrib.contenttypes">contrib.contenttypes</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc" class="missing">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+(Yes, I know GFKs are evil and should be avoided at all costs. Nonetheless, as long as Django supports them, people will use them.)<br />
+</p>
+<p>
+Django automatically adds an index on foreign keys, for fast reverse lookups, unless it's explicitly disabled with <tt>db_index = False</tt>.<br />
+</p>
+<p>
+I believe it should also add an index on <tt>(content_type, object_id)</tt> on GFK. If we make this the default in a future version of Django, users will just have to run <tt>makemigrations</tt> on apps that have a GFK and they'll get the index for free.<br />
+</p>
+<p>
+The alternative would be to update the documentation to recommend adding the index explicitly.<br />
+</p>
+<pre class="wiki">    class Meta:
+        index_together = [('content_type', 'object_id')]
+</pre>
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(8)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1410005209181399">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-06T07%3A06%3A49-05%3A00&amp;precision=second" title="See timeline at 09/06/14 07:06:49">19 months ago</a> by loic
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+It's indeed a big performance footgun, accepting on this basis.<br />
+</p>
+<p>
+I vote for adding the index automatically but how would that work in practice? The field would manipulate the model's <tt>Meta</tt> from <tt>contribute_to_class</tt>?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1410023706401746">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-06T12%3A15%3A06-05%3A00&amp;precision=second" title="See timeline at 09/06/14 12:15:06">19 months ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I haven't thought about the implementation yet.<br />
+</p>
+<p>
+Also we should make sure not to create a duplicate index for the people who added the right one.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1417693223115848">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-04T05%3A40%3A23-06%3A00&amp;precision=second" title="See timeline at 12/04/14 05:40:23">16 months ago</a> by alexanderad
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I've started looking at this ticket, and first tricky thing I caught (using <tt>contrubute_to_class</tt>) is following scenario (taken from model_meta tests):<br />
+(in short: is there a simple way to distinguish abstract field from multi-table inherited?)<br />
+</p>
+<div class="code"><pre><span class="k">class</span> <span class="nc">AbstractPerson</span><span class="p">(</span>models<span class="o">.</span>Model<span class="p">):</span>
+    <span class="o">...</span>
+    <span class="c"># GFK fields</span>
+    content_type_abstract <span class="o">=</span> models<span class="o">.</span>ForeignKey<span class="p">(</span>ContentType<span class="p">,</span> related_name<span class="o">=</span><span class="s">'+'</span><span class="p">)</span>
+    object_id_abstract <span class="o">=</span> models<span class="o">.</span>PositiveIntegerField<span class="p">()</span>
+    content_object_abstract <span class="o">=</span> GenericForeignKey<span class="p">(</span><span class="s">'content_type_abstract'</span><span class="p">,</span> <span class="s">'object_id_abstract'</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        abstract <span class="o">=</span> <span class="bp">True</span>
+</pre></div><p>
+This one is easy, here we need:<br />
+</p>
+<pre class="wiki">index_together = (('object_id_abstract', 'content_object_abstract'),)
+</pre><hr />
+<div class="code"><pre><span class="k">class</span> <span class="nc">BasePerson</span><span class="p">(</span>AbstractPerson<span class="p">):</span>
+    <span class="o">...</span>
+    <span class="c"># GFK fields</span>
+    content_type_base <span class="o">=</span> models<span class="o">.</span>ForeignKey<span class="p">(</span>ContentType<span class="p">,</span> related_name<span class="o">=</span><span class="s">'+'</span><span class="p">)</span>
+    object_id_base <span class="o">=</span> models<span class="o">.</span>PositiveIntegerField<span class="p">()</span>
+    content_object_base <span class="o">=</span> GenericForeignKey<span class="p">(</span><span class="s">'content_type_base'</span><span class="p">,</span> <span class="s">'object_id_base'</span><span class="p">)</span>
+</pre></div><p>
+This one is easy too, at this point we need:<br />
+</p>
+<pre class="wiki">index_together = (
+    ('object_id_abstract', 'content_object_abstract'), 
+    ('content_type_base', 'object_id_base')
+)
+</pre><hr />
+<p>
+But then I stuck:<br />
+</p>
+<div class="code"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">(</span>BasePerson<span class="p">):</span>
+    <span class="o">...</span>
+    <span class="c"># GFK fields</span>
+    content_type_concrete <span class="o">=</span> models<span class="o">.</span>ForeignKey<span class="p">(</span>ContentType<span class="p">,</span> related_name<span class="o">=</span><span class="s">'+'</span><span class="p">)</span>
+    object_id_concrete <span class="o">=</span> models<span class="o">.</span>PositiveIntegerField<span class="p">()</span>
+    content_object_concrete <span class="o">=</span> GenericForeignKey<span class="p">(</span><span class="s">'content_type_concrete'</span><span class="p">,</span> <span class="s">'object_id_concrete'</span><span class="p">)</span>
+</pre></div><p>
+At this point in <tt>contribute_to_class</tt> we are going to add two more fields to index from <tt>Person</tt>, this is OK. But we have also inherited from <tt>BasePerson</tt> + abstract from <tt> AbstractPerson</tt>. All those fields belong to <tt>BasePerson</tt>, but we need to take from there only abstract ones, so that for <tt>Person</tt> we have:<br />
+</p>
+<pre class="wiki">index_together = (
+    ('object_id_abstract', 'content_object_abstract'), 
+    ('content_type_concrete', 'object_id_concrete')
+)
+</pre><p>
+We can't add to index BasePerson fields since those live in different table. But we still need ones from AbstractPerson.<br />
+Probably I'm terribly wrong, but for this case I can't see obvious way to tell which inherited fields came from Abstract model and which from Base one. <br />
+</p>
+<pre class="wiki">ipdb&gt; cls
+&lt;class 'model_meta.models.Person'&gt;
+ipdb&gt; [x.name for x in cls._meta.local_fields]
+['baseperson_ptr', 'data_inherited', 'fk_inherited', 'data_not_concrete_inherited', 'content_type_concrete', 'object_id_concrete']
+
+ipdb&gt; [x.name for x in cls._meta.fields]
+['id', 'data_abstract', 'fk_abstract', 'data_not_concrete_abstract', 'content_type_abstract', 'object_id_abstract', 'data_base', 'fk_base', 'data_not_concrete_base', 'content_type_base', 'object_id_base', 'baseperson_ptr', 'data_inherited', 'fk_inherited', 'data_not_concrete_inherited', 'content_type_concrete', 'object_id_concrete']
+
+ipdb&gt; cls._meta.get_field('object_id_base').model # &lt;&lt; this one is from base, we need to omit it
+&lt;class 'model_meta.models.BasePerson'&gt;
+ipdb&gt; cls._meta.get_field('object_id_abstract').model # &lt;&lt;&lt; this one is from abstract, we need it
+&lt;class 'model_meta.models.BasePerson'&gt;
+</pre><p>
+ <br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1417704973779597">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-04T08%3A56%3A13-06%3A00&amp;precision=second" title="See timeline at 12/04/14 08:56:13">16 months ago</a> by charettes
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+The <tt>('object_id_abstract', 'content_object_abstract')</tt> index should only be added to <tt>BasePerson</tt> indexes and not <tt>Person</tt> ones.<br />
+</p>
+<p>
+In this case you can solely rely on <tt>opts.local_fields</tt> to make sure both <tt>ct_field</tt> and <tt>fk_field</tt> are local in order to add the index.<br />
+</p>
+<p>
+If one of the fields is not local (it belongs to a concrete parent) then the index shouldn't be created.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1417782852426249">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-05T06%3A34%3A12-06%3A00&amp;precision=second" title="See timeline at 12/05/14 06:34:12">16 months ago</a> by alexanderad
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Oh, so, this means that <tt>Person</tt> in fact has no abstract model columns in its table. In this case that makes sense.<br />
+</p>
+<p>
+One more thing: it seems that <tt>cls._meta.local_fields</tt> is not guaranteed to be fully populated during <tt>contribute_to_class</tt> call, is it? From run to run I'm getting different set of fields in <tt>local_fields</tt> during <tt>contribute_to_class</tt> calls.<br />
+</p>
+<p>
+However, the order of calls are always consistent, for example, <tt>Person</tt> gets contributions from itself (<tt>Person.content_object_concrete</tt>), then from <tt>BasePerson</tt> and finally from <tt>AbstractPerson</tt>. <br />
+</p>
+<p>
+I need to go deeper.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1417791340485195">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-05T08%3A55%3A40-06%3A00&amp;precision=second" title="See timeline at 12/05/14 08:55:40">16 months ago</a> by alexanderad
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+What also interests me, what kind of index do we want? Composite one, which has two columns, or two separate? We automatically get <tt>fk_field</tt> indexed, do we need to add, in this case, separate index on <tt>ct_field</tt>?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1417792249027478">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-12-05T09%3A10%3A49-06%3A00&amp;precision=second" title="See timeline at 12/05/14 09:10:49">16 months ago</a> by alexanderad
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Here is my naive implementation for this ticket: <a class="ext-link" href="https://github.com/alexanderad/django/compare/alexanderad:master...ticket_23435_indexed_gfk"><span class="icon">​</span>https://github.com/alexanderad/django/compare/alexanderad:master...ticket_23435_indexed_gfk</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1438368365332731">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-07-31T13%3A46%3A05-05%3A00&amp;precision=second" title="See timeline at 07/31/15 13:46:05">8 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-component">
+      <strong class="trac-field-component">Component</strong>
+        changed from <em>Database layer (models, ORM)</em> to <em>contrib.contenttypes</em>
+    </li><li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>GFK should be indexed</em> to <em>GenericForeignKey should be indexed</em>
+    </li>
+  </ul>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <script type="text/javascript">
+        jQuery.loadStyleSheet("/pygments/trac.css", "text/css");
+    </script>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/23435?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/23435?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/23435?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

@@ -1,0 +1,995 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #23130 (BooleanField should not override 'blank' if choices are specified)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/23129" title="Ticket #23129" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/23130?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/23130?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/23130?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/23131" title="Ticket #23131" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/23129" title="Ticket #23129">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/23131" title="Ticket #23131">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2014-07-29T17%3A08%3A13-05%3A00&amp;precision=second" title="See timeline at 07/29/14 17:08:13">20 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2014-09-05T02%3A50%3A58-05%3A00&amp;precision=second" title="See timeline at 09/05/14 02:50:58">19 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/23130" class="trac-id">#23130</a>
+    <span class="trac-status">
+      <a href="/query?status=assigned">assigned</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=Bug">Bug</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">BooleanField should not override 'blank' if choices are specified</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=jonash">jonash</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=tushar">tushar</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Database+layer+(models%2C+ORM)">Database layer (models, ORM)</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              jonas-django@…, tushar747@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+BooleanField currently allows settings 'choices'. It also always overrides 'blank'. This stems from the fact that in HTML, a blank value means False, and any (?) non-blank value means True for check boxes.<br />
+</p>
+<p>
+Now if you override 'choices', things change in terms of HTML, since now True and False are represented by "True" and "False" in the select box. This also makes it possible to supply a null/blank value (which would have meant False in the checkbox case).<br />
+</p>
+<p>
+BooleanField should either handle this fact gracefully, for instance by only overriding 'blank' if 'choices' is not given and then interpreting "True" and "False" as True and False. Or it should disallow overriding 'choices' entirely.<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+    <div id="attachments">
+        <h3 class="foldable">Attachments <span class="trac-count">(3)</span></h3>
+        <div class="attachments">
+          <dl class="attachments">
+              <dt>
+    <a href="/attachment/ticket/23130/initial-form.png" title="View attachment">initial-form.png</a><a href="/raw-attachment/ticket/23130/initial-form.png" class="trac-rawlink" title="Download">​</a>
+       (<span title="27815 bytes">27.2 KB</span>) -
+      added by <em>jonash</em> <a class="timeline" href="/timeline?from=2014-07-31T17%3A55%3A26-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:55:26">20 months ago</a>.
+  </dt>
+              <dt>
+    <a href="/attachment/ticket/23130/form-after-save.png" title="View attachment">form-after-save.png</a><a href="/raw-attachment/ticket/23130/form-after-save.png" class="trac-rawlink" title="Download">​</a>
+       (<span title="31716 bytes">31.0 KB</span>) -
+      added by <em>jonash</em> <a class="timeline" href="/timeline?from=2014-07-31T17%3A55%3A32-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:55:32">20 months ago</a>.
+  </dt>
+              <dt>
+    <a href="/attachment/ticket/23130/bug23130.tar.gz" title="View attachment">bug23130.tar.gz</a><a href="/raw-attachment/ticket/23130/bug23130.tar.gz" class="trac-rawlink" title="Download">​</a>
+       (<span title="7621 bytes">7.4 KB</span>) -
+      added by <em>jonash</em> <a class="timeline" href="/timeline?from=2014-07-31T17%3A55%3A39-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:55:39">20 months ago</a>.
+  </dt>
+          </dl>
+          <p>
+            Download all attachments as: <a rel="nofollow" href="/zip-attachment/ticket/23130/">.zip</a>
+          </p>
+          
+        </div>
+    </div>
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(22)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1406702444880640">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-30T01%3A40%3A44-05%3A00&amp;precision=second" title="See timeline at 07/30/14 01:40:44">20 months ago</a> by tushar
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-2-1406740614556019">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-30T12%3A16%3A54-05%3A00&amp;precision=second" title="See timeline at 07/30/14 12:16:54">20 months ago</a> by timo
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Could you provide a code example of the problem?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-31T17%3A55%3A26-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:55:26">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/23130/initial-form.png"><em>initial-form.png</em></a><a href="/raw-attachment/ticket/23130/initial-form.png" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-31T17%3A55%3A32-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:55:32">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/23130/form-after-save.png"><em>form-after-save.png</em></a><a href="/raw-attachment/ticket/23130/form-after-save.png" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-31T17%3A55%3A39-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:55:39">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/23130/bug23130.tar.gz"><em>bug23130.tar.gz</em></a><a href="/raw-attachment/ticket/23130/bug23130.tar.gz" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-3-1406847439377791">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-31T17%3A57%3A19-05%3A00&amp;precision=second" title="See timeline at 07/31/14 17:57:19">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+"initial-form.png" shows the admin form right before pressing "Save". "form-after-save.png" shows the data that was actually saved.<br />
+</p>
+<p>
+"bug23139.tar.gz" contains the code to produce this form. It's no more than a single BooleanField with some 'choices'.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1406847600790642">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-31T18%3A00%3A00-05%3A00&amp;precision=second" title="See timeline at 07/31/14 18:00:00">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Expected behavior when pressing "Save": The message "this field is required" should appear, since it hasn't been filled out. This doesn't work as expected because 'blank' is always set to True in the BooleanField's <tt>__init__</tt> method. This is because a blank/absent value means False if the BooleanField widget is a checkbox. But if rendered as a choices list, things change. See initial description for a more elaborate description of the issue.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1407000931132656">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-02T12%3A35%3A31-05%3A00&amp;precision=second" title="See timeline at 08/02/14 12:35:31">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>jonas-django@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-6-1407057273364036">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-03T04%3A14%3A33-05%3A00&amp;precision=second" title="See timeline at 08/03/14 04:14:33">20 months ago</a> by tushar
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>tushar747@…</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I've just confirmed that I get this same behaviour as described by jonash. I don't believe that disallowing the overriding of choices is an appropriate solution as it is useful in cases where the Boolean values resemble a meaning. I think the way forward is to disable the override in the init method. Here's a quick update for the <span class="underline">init</span> method:<br />
+</p>
+<pre class="wiki">    def __init__(self, *args, **kwargs):
+        if 'choices' not in kwargs:
+            kwargs['blank'] = True
+        super(BooleanField, self).__init__(*args, **kwargs)
+</pre><p>
+This code gives the desired behaviour: if a Null value is specified when choices are overridden, then it will not be updated. <br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2014-08-04T06%3A01%3A27-05%3A00&amp;precision=second" title="See timeline at 08/04/14 06:01:27">20 months ago</a>
+        by tushar
+      (<a href="/ticket/23130?cversion=0&amp;cnum_hist=6#comment:6">previous</a>)
+      (<a href="/ticket/23130?action=comment-diff&amp;cnum=6&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1407196389112906">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T18%3A53%3A09-05%3A00&amp;precision=second" title="See timeline at 08/04/14 18:53:09">20 months ago</a> by timo
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>BooleanField should either forbid setting 'choices' or not override 'blank'</em> to <em>BooleanField should not override 'blank' if choices are specified</em>
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Sounds good to me.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1407203554740314">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T20%3A52%3A34-05%3A00&amp;precision=second" title="See timeline at 08/04/14 20:52:34">20 months ago</a> by tushar
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Great. Wrote tests + submitted patch as described above. Here's the pull request: <a class="ext-link" href="https://github.com/django/django/pull/3025"><span class="icon">​</span>https://github.com/django/django/pull/3025</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-9-1407206564152119">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-04T21%3A42%3A44-05%3A00&amp;precision=second" title="See timeline at 08/04/14 21:42:44">20 months ago</a> by tushar
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-owner">
+      <strong class="trac-field-owner">Owner</strong>
+        changed from <em>nobody</em> to <em>tushar</em>
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>new</em> to <em>assigned</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-10-1407246670946234">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-05T08%3A51%3A10-05%3A00&amp;precision=second" title="See timeline at 08/05/14 08:51:10">20 months ago</a> by jonash
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Actually, my initial suggestion feels like something that violates the "separation of concerns" principle. Interpreting browser-submitted values should happen in the <em>checkbox widget</em>. This is completely unrelated to the model layer. Why not have <tt>BooleanField</tt> behave as follows:<br />
+</p>
+<ul><li>Don't override <tt>blank</tt> at all
+</li><li><tt>CheckboxInput</tt> should interpret "value absent from POST" as False, any other value as True (already does this)
+</li><li><tt>BooleanField</tt> should interpret None as a blank value (already does this)
+</li></ul><p>
+Why does <tt>BooleanField</tt> need to have <tt>blank=True</tt> in the first place?<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2014-08-05T08%3A51%3A34-05%3A00&amp;precision=second" title="See timeline at 08/05/14 08:51:34">20 months ago</a>
+        by jonash
+      (<a href="/ticket/23130?cversion=0&amp;cnum_hist=10#comment:10">previous</a>)
+      (<a href="/ticket/23130?action=comment-diff&amp;cnum=10&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1407248831882679">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-05T09%3A27%3A11-05%3A00&amp;precision=second" title="See timeline at 08/05/14 09:27:11">20 months ago</a> by timo
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+If <tt>blank=False</tt> on a <tt>BooleanField</tt> then <tt>False</tt> isn't allowed so by default it would be a checkbox that must be checked.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-12-1407317239125217">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:12" class="cnum">
+    <a href="#comment:12">comment:12</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-06T04%3A27%3A19-05%3A00&amp;precision=second" title="See timeline at 08/06/14 04:27:19">20 months ago</a> by anonymous
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Are you talking about the model or the forms layer?<br />
+</p>
+<p>
+In the former case, why is False considered a blank value in the first place? Shouldn't None be the only value considered blank?<br />
+</p>
+<p>
+In the latter case, see my last comment.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-13-1407437705878887">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:13" class="cnum">
+    <a href="#comment:13">comment:13</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-07T13%3A55%3A05-05%3A00&amp;precision=second" title="See timeline at 08/07/14 13:55:05">20 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+It's at the <a class="ext-link" href="https://github.com/django/django/blob/f676305ecede116332884ea682fc953c29813232/django/forms/fields.py#L744"><span class="icon">​</span>forms layer</a>. I haven't looked into it, but it may be difficult or impossible to change now due to backwards compatibility. Patches/ideas welcome.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-14-1407455084676753">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:14" class="cnum">
+    <a href="#comment:14">comment:14</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-07T18%3A44%3A44-05%3A00&amp;precision=second" title="See timeline at 08/07/14 18:44:44">20 months ago</a> by jonashaag
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Having given this whole business some hours' thought, I actually believe that making a difference between BooleanField and NullBooleanField is fundamentally wrong. I know NullBooleanField has been in Django from the beginning and removing it/changing BooleanField is a nightmare in terms of backwards compatibility.<br />
+</p>
+<p>
+Still I'd like to propose a better implementation in form of this patch: <a class="ext-link" href="https://gist.github.com/jonashaag/d8a9f82d88c60c103189"><span class="icon">​</span>https://gist.github.com/jonashaag/d8a9f82d88c60c103189</a> (This passes the complete test suite except for a handful of minor now-outdated tests!)<br />
+</p>
+<p>
+In this version, BooleanField behaves much more like any other field, simplifying both the implementation and the usage. <tt>blank</tt> may be used freely as with any other field. The same applies to <tt>null</tt>. By default, it renders as a checkbox and does not allow <tt>None</tt> (i.e. <tt>blank=False</tt> like with any other field). If <tt>blank</tt> is set to True, it renders as choices with an additional blank option. It also renders as choices if <tt>choices</tt> is given.<br />
+</p>
+<p>
+<tt>NullBooleanField</tt> stays as a mere wrapper for <tt>BooleanField</tt> with <tt>blank=null=True</tt>.<br />
+</p>
+<p>
+Here is a shortened version of the new implementation:<br />
+</p>
+<div class="code"><pre><span class="k">class</span> <span class="nc">BooleanField</span><span class="p">(</span>Field<span class="p">):</span>
+    empty_strings_allowed <span class="o">=</span> <span class="bp">False</span>
+    default_error_messages <span class="o">=</span> <span class="p">{</span>
+        <span class="s">'invalid'</span><span class="p">:</span> _<span class="p">(</span><span class="s">"'</span><span class="si">%(value)s</span><span class="s">' value must be either True or False."</span><span class="p">),</span>
+    <span class="p">}</span>
+    description <span class="o">=</span> _<span class="p">(</span><span class="s">"Boolean (Either True or False)"</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_internal_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">"BooleanField"</span>
+
+    <span class="k">def</span> <span class="nf">to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> value<span class="p">):</span>
+        <span class="k">if</span> value <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> value
+        <span class="k">if</span> value <span class="ow">in</span> <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="c"># if value is 1 or 0 than it's equal to True or False, but we want</span>
+            <span class="c"># to return a true bool for semantic reasons.</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span>value<span class="p">)</span>
+        <span class="k">if</span> value <span class="ow">in</span> <span class="p">(</span><span class="s">'t'</span><span class="p">,</span> <span class="s">'True'</span><span class="p">,</span> <span class="s">'1'</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> value <span class="ow">in</span> <span class="p">(</span><span class="s">'f'</span><span class="p">,</span> <span class="s">'False'</span><span class="p">,</span> <span class="s">'0'</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">raise</span> exceptions<span class="o">.</span>ValidationError<span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span>error_messages<span class="p">[</span><span class="s">'invalid'</span><span class="p">],</span>
+            code<span class="o">=</span><span class="s">'invalid'</span><span class="p">,</span>
+            params<span class="o">=</span><span class="p">{</span><span class="s">'value'</span><span class="p">:</span> value<span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c"># ...</span>
+
+    <span class="k">def</span> <span class="nf">formfield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span>kwargs<span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span>blank <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span>choices<span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span>BooleanField<span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span>formfield<span class="p">(</span><span class="o">**</span>kwargs<span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># In the checkbox case, 'required' means "must be checked (=&gt; true)",</span>
+            <span class="c"># which is different from the choices case ("must select some value").</span>
+            <span class="c"># Since we want to allow both True and False (checked/unchecked) choices,</span>
+            <span class="c"># set 'required' to False.</span>
+            defaults <span class="o">=</span> <span class="p">{</span><span class="s">'form_class'</span><span class="p">:</span> forms<span class="o">.</span>BooleanField<span class="p">,</span>
+                        <span class="s">'required'</span><span class="p">:</span> <span class="bp">False</span><span class="p">}</span>
+            defaults<span class="o">.</span>update<span class="p">(</span>kwargs<span class="p">)</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span>BooleanField<span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span>formfield<span class="p">(</span><span class="o">**</span>defaults<span class="p">)</span>
+</pre></div>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-15-1407796654323693">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:15" class="cnum">
+    <a href="#comment:15">comment:15</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-11T17%3A37%3A34-05%3A00&amp;precision=second" title="See timeline at 08/11/14 17:37:34">19 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+What are the backwards compatibility ramifications of the proposal?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-16-1407919927828868">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:16" class="cnum">
+    <a href="#comment:16">comment:16</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-13T03%3A52%3A07-05%3A00&amp;precision=second" title="See timeline at 08/13/14 03:52:07">19 months ago</a> by jonashaag
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Can't think of any documented/tested incompatibilities, except for NullBooleanField being deprecated/superseded by BooleanField. But it may have undocumented surprises, for instance for people who rely on the behavior I consider a bug in my initial ticket description. Or for people who expect the forced <tt>blank=True</tt> on BooleanFields.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-17-1407951590045807">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:17" class="cnum">
+    <a href="#comment:17">comment:17</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-13T12%3A39%3A50-05%3A00&amp;precision=second" title="See timeline at 08/13/14 12:39:50">19 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+You mentioned some test updates were required. That suggests to me there could be some compatibility issues but difficult to say for sure without seeing them. Maybe they will be acceptable, but they will at least need to be documented in the release notes. If you can send a PR with the updates, it'll be easier to review.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-18-1409269294803804">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:18" class="cnum">
+    <a href="#comment:18">comment:18</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-08-28T18%3A41%3A34-05%3A00&amp;precision=second" title="See timeline at 08/28/14 18:41:34">19 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Jonas, do you plan to submit a patch? Should we close the first PR that was proposed?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-19-1409903458376511">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:19" class="cnum">
+    <a href="#comment:19">comment:19</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-09-05T02%3A50%3A58-05%3A00&amp;precision=second" title="See timeline at 09/05/14 02:50:58">19 months ago</a> by jonashaag
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I plan on submitting a patch in a few weeks. I'm having trouble with my development machine at the moment. I think that PR may be closed.<br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <script type="text/javascript">
+        jQuery.loadStyleSheet("/pygments/trac.css", "text/css");
+    </script>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/23130?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/23130?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/23130?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

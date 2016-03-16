@@ -1,0 +1,6 @@
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Referer: https://code.djangoproject.com/query?status=!closed&page=2&desc=1&order=id
+Accept-Language: en
+Accept-Encoding: gzip,deflate
+User-Agent: Scrapy/1.1.0rc3 (+http://scrapy.org)
+Cookie: trac_session=8eeb2483aabc3500a81d0300; trac_form_token=c194439d9bc0beebf8673bad

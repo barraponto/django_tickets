@@ -1,0 +1,719 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #25530 (Deferred foreign keys operations fail when the column is changed during the same migration)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/25529" title="Ticket #25529" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/25530?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/25530?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/25530?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/25531" title="Ticket #25531" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/25529" title="Ticket #25529">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/25531" title="Ticket #25531">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2015-10-08T08%3A37%3A41-05%3A00&amp;precision=second" title="See timeline at 10/08/15 08:37:41">5 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-10-21T08%3A16%3A56-05%3A00&amp;precision=second" title="See timeline at 10/21/15 08:16:56">5 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/25530" class="trac-id">#25530</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=Bug">Bug</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Deferred foreign keys operations fail when the column is changed during the same migration</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=simonphilips">simonphilips</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Migrations">Migrations</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=1.8">1.8</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              pdewacht@…, <a href="/query?status=!closed&amp;cc=~shaib">shaib</a>
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+      <a href="/ticket/25530?action=diff&amp;version=2" class="lastmod trac-diff" title="2015-10-08 13:46:13.492020+00:00">
+        (last modified by simonphilips)
+      </a>
+    </h3>
+    <div class="searchable">
+      <p>
+Possibly related to <a class="closed ticket" href="/ticket/25521" title="Cleanup/optimization: squashmigrations tries to add foreign keys to removed models (closed: needsinfo)">#25521</a><br />
+</p>
+<p>
+The following migration is the result of squashing 3 smaller migrations together: <br />
+</p>
+<ol><li>the initial migration
+</li><li>some random RunPython migration
+</li><li>changing the foreign key's column migration
+</li></ol><p>
+The second step is only necessary to prevent squashmigrations from being smart which avoids the issue.<br />
+</p>
+<p>
+The squashed migration (both optimized and unoptimized) looks as following:<br />
+</p>
+<div class="code"><pre><span class="c"># -*- coding: utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> unicode_literals
+
+<span class="kn">from</span> <span class="nn">django.db</span> <span class="kn">import</span> migrations<span class="p">,</span> models
+
+
+<span class="c"># bug.migrations.0002_run_python</span>
+
+<span class="k">def</span> <span class="nf">do_something</span><span class="p">(</span>apps<span class="p">,</span> schema_editor<span class="p">):</span>
+    <span class="k">pass</span>  <span class="c"># Do nothing, it's not important anyway.</span>
+
+
+<span class="k">class</span> <span class="nc">Migration</span><span class="p">(</span>migrations<span class="o">.</span>Migration<span class="p">):</span>
+
+    replaces <span class="o">=</span> <span class="p">[(</span><span class="s">'bug'</span><span class="p">,</span> <span class="s">'0001_initial'</span><span class="p">),</span> <span class="p">(</span><span class="s">'bug'</span><span class="p">,</span> <span class="s">'0002_run_python'</span><span class="p">),</span> <span class="p">(</span><span class="s">'bug'</span><span class="p">,</span> <span class="s">'0003_change_db_column'</span><span class="p">)]</span>
+
+    dependencies <span class="o">=</span> <span class="p">[</span>
+    <span class="p">]</span>
+
+    operations <span class="o">=</span> <span class="p">[</span>
+        migrations<span class="o">.</span>CreateModel<span class="p">(</span>
+            name<span class="o">=</span><span class="s">'Child'</span><span class="p">,</span>
+            fields<span class="o">=</span><span class="p">[</span>
+                <span class="p">(</span><span class="s">'id'</span><span class="p">,</span> models<span class="o">.</span>AutoField<span class="p">(</span>auto_created<span class="o">=</span><span class="bp">True</span><span class="p">,</span> serialize<span class="o">=</span><span class="bp">False</span><span class="p">,</span> verbose_name<span class="o">=</span><span class="s">'ID'</span><span class="p">,</span> primary_key<span class="o">=</span><span class="bp">True</span><span class="p">)),</span>
+                <span class="p">(</span><span class="s">'data'</span><span class="p">,</span> models<span class="o">.</span>IntegerField<span class="p">(</span>default<span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+            <span class="p">],</span>
+        <span class="p">),</span>
+        migrations<span class="o">.</span>CreateModel<span class="p">(</span>
+            name<span class="o">=</span><span class="s">'Parent'</span><span class="p">,</span>
+            fields<span class="o">=</span><span class="p">[</span>
+                <span class="p">(</span><span class="s">'id'</span><span class="p">,</span> models<span class="o">.</span>AutoField<span class="p">(</span>auto_created<span class="o">=</span><span class="bp">True</span><span class="p">,</span> serialize<span class="o">=</span><span class="bp">False</span><span class="p">,</span> verbose_name<span class="o">=</span><span class="s">'ID'</span><span class="p">,</span> primary_key<span class="o">=</span><span class="bp">True</span><span class="p">)),</span>
+                <span class="p">(</span><span class="s">'data'</span><span class="p">,</span> models<span class="o">.</span>IntegerField<span class="p">(</span>default<span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+            <span class="p">],</span>
+        <span class="p">),</span>
+        migrations<span class="o">.</span>AddField<span class="p">(</span>
+            model_name<span class="o">=</span><span class="s">'child'</span><span class="p">,</span>
+            name<span class="o">=</span><span class="s">'parent'</span><span class="p">,</span>
+            field<span class="o">=</span>models<span class="o">.</span>ForeignKey<span class="p">(</span>db_column<span class="o">=</span><span class="s">'my_parent'</span><span class="p">,</span> to<span class="o">=</span><span class="s">'bug.Parent'</span><span class="p">),</span>
+        <span class="p">),</span>
+        migrations<span class="o">.</span>RunPython<span class="p">(</span>
+            code<span class="o">=</span>do_something<span class="p">,</span>
+        <span class="p">),</span>
+        migrations<span class="o">.</span>AlterField<span class="p">(</span>
+            model_name<span class="o">=</span><span class="s">'child'</span><span class="p">,</span>
+            name<span class="o">=</span><span class="s">'parent'</span><span class="p">,</span>
+            field<span class="o">=</span>models<span class="o">.</span>ForeignKey<span class="p">(</span>to<span class="o">=</span><span class="s">'bug.Parent'</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+</pre></div><p>
+The models are:<br />
+</p>
+<div class="code"><pre><span class="k">class</span> <span class="nc">Parent</span><span class="p">(</span>models<span class="o">.</span>Model<span class="p">):</span>
+    data <span class="o">=</span> models<span class="o">.</span>IntegerField<span class="p">(</span>default<span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Child</span><span class="p">(</span>models<span class="o">.</span>Model<span class="p">):</span>
+    <span class="c"># Original db_column:</span>
+    <span class="c"># parent = models.ForeignKey(Parent, db_column="my_parent")</span>
+
+    <span class="c"># New db_column:</span>
+    parent <span class="o">=</span> models<span class="o">.</span>ForeignKey<span class="p">(</span>Parent<span class="p">)</span>
+    data <span class="o">=</span> models<span class="o">.</span>IntegerField<span class="p">(</span>default<span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div><p>
+This will result in the following PostgreSQL error:<br />
+</p>
+<pre class="wiki">2015-10-08 15:00:27 CEST ERROR:  column "my_parent" does not exist
+2015-10-08 15:00:27 CEST STATEMENT:  CREATE INDEX "bug_child_1e28668d" ON "bug_child" ("my_parent")
+</pre><p>
+The reason seems to be that any foreign key operations are added in SQL format to the <tt>schema_editor.deferred_sql</tt> list and are then executed after all other SQL commands. However, the third operation already renamed the column for that index to 'parent_id'.<br />
+</p>
+<p>
+The deferred statements should follow any changes made during further operations. Or, if that's not possible, perhaps some sort of 'insert deferred statements now' operation could be added after each 'submigration' in the squashed migration? In fact, that may even be desired, since the RunPython submigration may depend on the foreign key's behaviour/index for speed.<br />
+</p>
+<p>
+Note that in this sample app it already crashes at the <tt>CREATE INDEX</tt> statement, but the statement after that is <tt>ALTER TABLE "bug_child" ADD CONSTRAINT "bug_child_my_parent_3b5bc08e1603165f_fk_bug_parent_id" FOREIGN KEY ("my_parent") REFERENCES "bug_parent" ("id") DEFERRABLE INITIALLY DEFERRED</tt>. I think the same issue might occur if <tt>bug_parent(id)</tt> would be renamed or removed.<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(8)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1444311843266785">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-08T08%3A44%3A03-05%3A00&amp;precision=second" title="See timeline at 10/08/15 08:44:03">5 months ago</a> by pdewacht
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>pdewacht@…</em> added
+    </li><li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-2-1444311973492020">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-08T08%3A46%3A13-05%3A00&amp;precision=second" title="See timeline at 10/08/15 08:46:13">5 months ago</a> by simonphilips
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-description">
+      <strong class="trac-field-description">Description</strong>
+        modified (<a href="/ticket/25530?action=diff&amp;version=2">diff</a>)
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-3-1444417077373974">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-09T13%3A57%3A57-05%3A00&amp;precision=second" title="See timeline at 10/09/15 13:57:57">5 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I don't know how "smart" we can make squashmigrations. The solution may have to be "don't squash migrations that contains operations that must remain in separate migrations."<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1444417956922403">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+          <span>follow-up:</span>
+    <a href="#comment:6" class="follow-up">↓ 6</a>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-09T14%3A12%3A36-05%3A00&amp;precision=second" title="See timeline at 10/09/15 14:12:36">5 months ago</a> by simonphilips
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I don't think squashmigrations really is to blame here. The migration process itself gets stuck over valid input that could have been written manually as the order of these operations makes perfect sense from a coder's point of view. What is the reason for delaying these SQL statements until after all operations have run? Why are they not run right after each operation?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1444418698288457">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-09T14%3A24%3A58-05%3A00&amp;precision=second" title="See timeline at 10/09/15 14:24:58">5 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+It might be related to <a class="changeset" href="/changeset/307acc745a4e655c35db96f96ceb4b87597dee49/" title="Fixed #24630 -- Clarified docs about RunPython transactions.
+
+Thanks ...">307acc745a4e655c35db96f96ceb4b87597dee49</a> (<a class="closed ticket" href="/ticket/24630" title="Bug: Misleading/incorrect docs about RunPython and transactions (closed: fixed)">#24630</a>), but this is not an area of expertise for me. If you have a solution to suggest, please do. It seems maybe you want each operation to be run in a transaction, however, my understanding is that this won't allow the entire migration to be atomic in case one of its operations fails.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1444468364402422">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+        in reply to:
+    <a href="#comment:4">↑ 4</a>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-10T04%3A12%3A44-05%3A00&amp;precision=second" title="See timeline at 10/10/15 04:12:44">5 months ago</a> by shaib
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>shaib</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Replying to <a class="ticket" href="/ticket/25530#comment:4" title="Comment 4">simonphilips</a>:<br />
+</p>
+<blockquote class="citation">
+<p>
+What is the reason for delaying these SQL statements until after all operations have run? Why are they not run right after each operation?<br />
+</p>
+</blockquote>
+<p>
+Think about a migration which adds two models to an app: a model <tt>A</tt>, and a model <tt>B</tt> with a FK to <tt>A</tt>. If <tt>A</tt> is created first, there's no problem, but if <tt>B</tt> is created first, then you can't add its foreign-key constraint until <tt>A</tt> is created. So, to run the statements immediately with the operation, you'd have to trace such dependencies and make sure models are created in the right order; this would be doable in the migration generator, but a bit of a chore if you write migrations by hand.<br />
+</p>
+<p>
+Now consider a case where there is a "loop" of FKs (<tt>A</tt> has a FK to <tt>B</tt> as well); there is no order of creating the models that will work -- you must separate out the constraint creation statements.<br />
+</p>
+<p>
+Since the "loop" case is valid, and a solution for it already handles the cases that would be solved by tracing FK dependencies, the solution was adopted across the board: Some statements are generated as "deferred" and are only executed at the end of the migration.<br />
+</p>
+<p>
+With that explanation in mind, your suggestion in the ticket -- to add an operation to "flush" the deferred statements, and put it in between original migrations when squashing, makes a lot of sense. There is a problem with that: Such an operation could seriously mess with the optimizer. A possible solution would be to insert the operation only before <tt>Run{Python,SQL}</tt> operations which block the optimizer anyway.<br />
+</p>
+<p>
+Adding an operation (whether implicitly or explicitly) would count as a new feature, and either way the problem is not a regression nor a major failure in a new feature in 1.8. If a solution can be found without new behavior, it might be accepted into 1.9, otherwise, it can only go in 1.10.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1445380285175917">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-20T17%3A31%3A25-05%3A00&amp;precision=second" title="See timeline at 10/20/15 17:31:25">5 months ago</a> by jbzdak
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I could attempt to write code of the flush operation (I have an issue that kind of, sort of is related but solution is the same). But this is not an EasyPickling task so I figured to ask for permssion. <br />
+</p>
+<p>
+For me this issue blocks, makes squashed migrations unusable, which is ok when I have 30 or so migrations in an app, but before django 1.10 is released problem might get out of hands. <br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1445433416997540">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-10-21T08%3A16%3A56-05%3A00&amp;precision=second" title="See timeline at 10/21/15 08:16:56">5 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I closed <a class="closed ticket" href="/ticket/25577" title="Bug: Squashed migrations do not work if deletion of indexed field can't be ... (closed: duplicate)">#25577</a> as a duplicate as it seems to be the same underlying issue.<br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <script type="text/javascript">
+        jQuery.loadStyleSheet("/pygments/trac.css", "text/css");
+    </script>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/25530?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/25530?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/25530?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

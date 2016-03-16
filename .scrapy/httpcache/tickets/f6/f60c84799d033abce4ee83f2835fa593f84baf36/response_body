@@ -1,0 +1,792 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #24871 (Textarea widget has redundant \r\n when writing XHTML)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/24870" title="Ticket #24870" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/24871?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/24871?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/24871?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/24872" title="Ticket #24872" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/24870" title="Ticket #24870">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/24872" title="Ticket #24872">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2015-05-28T18%3A44%3A55-05%3A00&amp;precision=second" title="See timeline at 05/28/15 18:44:55">10 months ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-06-08T09%3A34%3A07-05%3A00&amp;precision=second" title="See timeline at 06/08/15 09:34:07">9 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/24871" class="trac-id">#24871</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=Bug">Bug</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Textarea widget has redundant \r\n when writing XHTML</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=tompecina">tompecina</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Forms">Forms</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=1.8">1.8</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+              <a href="/query?status=!closed&amp;keywords=~textarea">textarea</a>, <a href="/query?status=!closed&amp;keywords=~widget">widget</a>
+        </td>
+    </tr><tr>
+        <th id="h_cc" class="missing">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+The Textarea widget contains leading \r\n, which is wrong in certain contexts (I experienced the problem with one of my Django projects outputting XML-serialized HTML5, which copied the newline to initial field value). These characters are unneeded and could and should safely be deleted. The patch (for Django 1.6, but there's no difference in later revisions) is attached.<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+    <div id="attachments">
+        <h3 class="foldable">Attachments <span class="trac-count">(3)</span></h3>
+        <div class="attachments">
+          <dl class="attachments">
+              <dt>
+    <a href="/attachment/ticket/24871/widgets.patch" title="View attachment">widgets.patch</a><a href="/raw-attachment/ticket/24871/widgets.patch" class="trac-rawlink" title="Download">​</a>
+       (<span title="584 bytes">584 bytes</span>) -
+      added by <em>tompecina</em> <a class="timeline" href="/timeline?from=2015-05-28T18%3A45%3A59-05%3A00&amp;precision=second" title="See timeline at 05/28/15 18:45:59">10 months ago</a>.
+  </dt>
+              <dt>
+    <a href="/attachment/ticket/24871/textarea1.html" title="View attachment">textarea1.html</a><a href="/raw-attachment/ticket/24871/textarea1.html" class="trac-rawlink" title="Download">​</a>
+       (<span title="129 bytes">129 bytes</span>) -
+      added by <em>tompecina</em> <a class="timeline" href="/timeline?from=2015-05-29T03%3A56%3A49-05%3A00&amp;precision=second" title="See timeline at 05/29/15 03:56:49">10 months ago</a>.
+  </dt>
+              <dt>
+    <a href="/attachment/ticket/24871/textarea1.xhtml" title="View attachment">textarea1.xhtml</a><a href="/raw-attachment/ticket/24871/textarea1.xhtml" class="trac-rawlink" title="Download">​</a>
+       (<span title="221 bytes">221 bytes</span>) -
+      added by <em>tompecina</em> <a class="timeline" href="/timeline?from=2015-05-29T03%3A57%3A07-05%3A00&amp;precision=second" title="See timeline at 05/29/15 03:57:07">10 months ago</a>.
+  </dt>
+          </dl>
+          <p>
+            Download all attachments as: <a rel="nofollow" href="/zip-attachment/ticket/24871/">.zip</a>
+          </p>
+          
+        </div>
+    </div>
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(14)</span></h3>
+          <div id="changelog">
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-28T18%3A45%3A59-05%3A00&amp;precision=second" title="See timeline at 05/28/15 18:45:59">10 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/24871/widgets.patch"><em>widgets.patch</em></a><a href="/raw-attachment/ticket/24871/widgets.patch" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-1-1432857664739811">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-28T19%3A01%3A04-05%3A00&amp;precision=second" title="See timeline at 05/28/15 19:01:04">10 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        unset
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Those characters are to fix <a class="closed ticket" href="/ticket/8627" title="Bug: Textarea misses first line if empty (in display) (closed: fixed)">#8627</a>. Has the situation with how browsers handle that situation changed or do we have two different use cases such that we have to make a decision which one to support? <br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1432858003923288">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-28T19%3A06%3A43-05%3A00&amp;precision=second" title="See timeline at 05/28/15 19:06:43">10 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+The test added in <a class="closed ticket" href="/ticket/8627" title="Bug: Textarea misses first line if empty (in display) (closed: fixed)">#8627</a> does fail in Firefox if the proposed patch is applied.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-29T03%3A56%3A49-05%3A00&amp;precision=second" title="See timeline at 05/29/15 03:56:49">10 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/24871/textarea1.html"><em>textarea1.html</em></a><a href="/raw-attachment/ticket/24871/textarea1.html" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change">
+                
+  <h3 class="change">
+    <span class="threading">
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-29T03%3A57%3A07-05%3A00&amp;precision=second" title="See timeline at 05/29/15 03:57:07">10 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-attachment">
+      <strong class="trac-field-attachment">Attachment</strong>
+        <a href="/attachment/ticket/24871/textarea1.xhtml"><em>textarea1.xhtml</em></a><a href="/raw-attachment/ticket/24871/textarea1.xhtml" title="Download" class="trac-rawlink">​</a>
+          added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-3-1432890141300405">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-29T04%3A02%3A21-05%3A00&amp;precision=second" title="See timeline at 05/29/15 04:02:21">10 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I added two more files, simple test forms. Their contents is practically identical, except that one is .html and the other .xhtml. Both Chrome and FF display them differently.<br />
+</p>
+<p>
+Thus, in my opinion, <a class="closed ticket" href="/ticket/8627" title="Bug: Textarea misses first line if empty (in display) (closed: fixed)">#8627</a> did not take into account the differences in behavior of browsers in XHTML mode, and the original patch should be reviewed. A clumsy, though practicable, workaround is to add the extra newline only if the content generated is (plain) HTML.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1432902034929494">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-29T07%3A20%3A34-05%3A00&amp;precision=second" title="See timeline at 05/29/15 07:20:34">10 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+For what it's worth, Rails also <a class="ext-link" href="https://github.com/rails/rails/blob/390449ab8c55dacc08517bc270c6203bb1f50e02/actionview/lib/action_view/helpers/tag_helper.rb#L25-L27"><span class="icon">​</span>adds a leading newline</a> (<a class="ext-link" href="https://github.com/rails/rails/issues/393"><span class="icon">​</span>issue</a>).<br />
+</p>
+<p>
+I don't see a good way of making the newline conditional on whether the widget is being rendered as HTML or XHTML as the widget doesn't have knowledge of that.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1432903181201212">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-29T07%3A39%3A41-05%3A00&amp;precision=second" title="See timeline at 05/29/15 07:39:41">10 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+That's right, so the information weather to add a newline would have to be supplied by the developer somehow, eg, in a settings variable.<br />
+</p>
+<p>
+To sum it up, standard HTML requires a leading newline as all browsers are required to ignore it, by the HTML standard. Stripping it would break a lot of existing code because leading newlines cannot be safely stripped, as is the case with CMS's, etc.<br />
+</p>
+<p>
+On the other hand, when Django is outputting XML-serialized code, there is no way to get rid of the extra newline, except using a custom Textarea widget.<br />
+</p>
+<p>
+I see no easy way out, the "lesser evil" appears to be a new settings variable.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1432904701157981">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-05-29T08%3A05%3A01-05%3A00&amp;precision=second" title="See timeline at 05/29/15 08:05:01">10 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+The problem with a setting is that it forces a project to choose XHTML or HTML (can't use both together). <tt>contrib.admin</tt>, for example, requires HTML (<a class="new ticket" href="/ticket/23908" title="Bug: XHTML breaks admin site (new)">#23908</a>).<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1433546516059470">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-06-05T18%3A21%3A56-05%3A00&amp;precision=second" title="See timeline at 06/05/15 18:21:56">9 months ago</a> by mjtamlyn
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>Textarea widget has redundant \r\n</em> to <em>Textarea widget has redundant \r\n when writing XHTML</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+New settings are definitely not the lesser of the evils!<br />
+</p>
+<p>
+I'm severely unconvinced we should be careful about support for XHTML5. IE doesn't support it, and it seems to be a much more non-standard practice than it was in html4 days. I would suggest maybe a documentation note with the text area widget, but I'm borderline to just closing this.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1433702509064264">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-06-07T13%3A41%3A49-05%3A00&amp;precision=second" title="See timeline at 06/07/15 13:41:49">9 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+If I had a time machine, I could easily find out if the XML-serialized HTML (aka "XHTML5") has any future. But I don't have one and at the moment, there are people - including me - using the XHTML format, and these are made to create custom textarea widgets. The primary problem is the inconsistent behavior of browsers (due to a failure of HTML/XML authors to deal with the whitespace trouble more elegantly in the first place). Therefore, it might be a good idea for Django to address this issue, by way of a settings variable or a widget parameter (or both). Well, if XHTML is dead, let's forget about it and close the ticket as obsolete and antiquated. <br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-9-1433744352861910">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-06-08T01%3A19%3A12-05%3A00&amp;precision=second" title="See timeline at 06/08/15 01:19:12">9 months ago</a> by carljm
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I think a setting to control this is a non-starter, and we can drop it from consideration. No other aspect of form widget rendering (or really, form behavior in general) is configured via settings. Not to mention Tim's objection, which is that a project wide setting fails to account for a project which may need both behaviors (eg because it is mostly XHTML5 but uses the admin).<br />
+</p>
+<p>
+Creating a custom widget subclass is not onerous. I do it all the time, for all sorts of reasons. My inclination is that that's an adequate solution for this case.<br />
+</p>
+<p>
+That said, I wouldn't have any problem with a <tt>prepend_newline</tt> parameter to <tt>Textarea</tt> which defaults to <tt>True</tt>. The justification for this is not so much XHTML5 specifically, and more just that the automatic new line stripping is conceptually odd behavior to begin with, added by browsers to workaround careless markup, and it seems reasonable to have a way to avoid our workaround for that workaround and revert to what would otherwise be the straightforward intuitive behavior for the <tt>Textarea</tt> widget (that is, leaving the provided contents alone). <br />
+</p>
+<p>
+I do think the added new line behavior is something that ought to be documented regardless. Accepting this ticket on the basis that at least docs should be added. <br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2015-06-08T01%3A22%3A43-05%3A00&amp;precision=second" title="See timeline at 06/08/15 01:22:43">9 months ago</a>
+        by carljm
+      (<a href="/ticket/24871?cversion=0&amp;cnum_hist=9#comment:9">previous</a>)
+      (<a href="/ticket/24871?action=comment-diff&amp;cnum=9&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-10-1433750500268076">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-06-08T03%3A01%3A40-05%3A00&amp;precision=second" title="See timeline at 06/08/15 03:01:40">9 months ago</a> by tompecina
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+The problem is not with having to subclass the widget (I never use non-custom widgets in my projects anyway) but that there is currently no elegant way of doing it; as a tentative and provisional fix, I'm overriding the <tt>render</tt> method with taking whatever the superclass' <tt>render</tt> returns and replacing the newline after the first "&gt;" with an empty string, like this:<br />
+</p>
+<pre class="wiki">    def render(self, *args, **kwargs):
+        return mark_safe(super(taw, self).render(*args, **kwargs).replace('&gt;\r\n', '&gt;', 1))
+</pre><p>
+Having a widget parameter would definitely be nice.<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2015-06-08T03%3A03%3A06-05%3A00&amp;precision=second" title="See timeline at 06/08/15 03:03:06">9 months ago</a>
+        by tompecina
+      (<a href="/ticket/24871?cversion=0&amp;cnum_hist=10#comment:10">previous</a>)
+      (<a href="/ticket/24871?action=comment-diff&amp;cnum=10&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1433774047379454">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-06-08T09%3A34%3A07-05%3A00&amp;precision=second" title="See timeline at 06/08/15 09:34:07">9 months ago</a> by carljm
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Yes, good point - I can see that in this case there's no elegant way for a subclass to change this behavior.<br />
+</p>
+<p>
+A more general solution would be to move the HTML template into a class attribute that a subclass could override (or one of these days finally fix <a class="new ticket" href="/ticket/15667" title="New feature: Implement template-based widget rendering (new)">#15667</a>).<br />
+</p>
+<p>
+On further thought, I think I'm more inclined towards the class attribute than the parameter. The goal is to eventually move towards <a class="new ticket" href="/ticket/15667" title="New feature: Implement template-based widget rendering (new)">#15667</a>, and once we arrive in that world (where all widget markup is overrideable via the template system) the existence of such a specific parameter for changing one aspect of rendering a <tt>Textarea</tt> would seem a bit of a wart, I think. Whereas moving the HTML template of a widget to a class attribute is consistent with other existing widgets, and offers a flexibility that's more similar to that of template-based widget rendering.<br />
+</p>
+<p>
+Is anyone opposed to moving the HTML template for <tt>Textarea</tt> to a class attribute of the widget?<br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/24871?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/24871?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/24871?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

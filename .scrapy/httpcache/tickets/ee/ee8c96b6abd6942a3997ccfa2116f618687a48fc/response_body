@@ -1,0 +1,997 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #20081 (Minimize the risk of SECRET_KEY leaks)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/20080" title="Ticket #20080" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/20081?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/20081?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/20081?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/20082" title="Ticket #20082" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="0e7f144922b5ab3c224d7204";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/20080" title="Ticket #20080">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/20082" title="Ticket #20082">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2013-03-18T16%3A08%3A53-05%3A00&amp;precision=second" title="See timeline at 03/18/13 16:08:53">3 years ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-04-16T12%3A29%3A33-05%3A00&amp;precision=second" title="See timeline at 04/16/15 12:29:33">11 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/20081" class="trac-id">#20081</a>
+    <span class="trac-status">
+      <a href="/query?status=assigned">assigned</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Minimize the risk of SECRET_KEY leaks</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=jacob">jacob</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=aj7may">aj7may</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=Core+(Other)">Core (Other)</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=master">master</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+              <a href="/query?status=!closed&amp;keywords=~nlsprint14">nlsprint14</a>
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              unai@…, eromijn@…, <a href="/query?status=!closed&amp;cc=~bendavis78">bendavis78</a>
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=1">yes</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=1">yes</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+<strong>Paul:</strong><br />
+</p>
+<p>
+We should consider generating it on the fly something like the way Horizon does:<br />
+<a class="ext-link" href="https://github.com/openstack/horizon/blob/master/horizon/utils/secret_key.py"><span class="icon">​</span>https://github.com/openstack/horizon/blob/master/horizon/utils/secret_key.py</a><br />
+</p>
+<p>
+The things we lose when the secret key changes (sessions and password reset links IIRC) are generally per-deployment specific anyway. There's still a lot of bikeshedding to be found behind that issue (should production servers have the ability to write this file), but it's not a bad approach for those same users who commit their secret keys to their public github repos.<br />
+</p>
+<p>
+<strong>Jacob:</strong><br />
+</p>
+<p>
+Oh this is neat! So basically when the server starts up it writes out<br />
+a secret key file if it one doesn't already exist? I like it, seems<br />
+like a really good thing to do in core. Security-by-default and all<br />
+that.<br />
+</p>
+<p>
+How does this handle multiple web servers, though? Seems like if you<br />
+weren't careful you'd end up with differing secrets across your web<br />
+nodes, bad news. Couldn't we do something similar but store the key in<br />
+the database? That seems like it wouldn't be any more or less secure<br />
+than the filesystem, and would solve N=1 problems.<br />
+</p>
+<p>
+<strong>Paul:</strong><br />
+</p>
+<p>
+Yeah, the multiple servers deployment its downside and the reason I originally objected to including it in Horizon. What it does is bump the user-facing issue (you have to deal with and understand a secret key) a bit further along the line. I'd be willing to guess that a majority of Django sites that leak the secret key fall into the N=1 category, or would do the correct thing WRT secret key if it weren't so easy to commit to the repo and was a specific action they had to take when N &gt; 1. The downside of course is that there will always be a learning curve.<br />
+</p>
+<p>
+I'm -1 on storing the key in the database - databases tend to be easier to compromise than file systems, and people tend to be lazy about the security of their DB backups.<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(22)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1363642878022113">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-18T16%3A41%3A18-05%3A00&amp;precision=second" title="See timeline at 03/18/13 16:41:18">3 years ago</a> by anonymous
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+For posterity, a non-master-HEAD reference to the same file: <a class="ext-link" href="https://github.com/openstack/horizon/blob/a3d136e36597c513b2942cc2dabe522d70533842/horizon/utils/secret_key.py"><span class="icon">​</span>https://github.com/openstack/horizon/blob/a3d136e36597c513b2942cc2dabe522d70533842/horizon/utils/secret_key.py</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1363642916890553">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-18T16%3A41%3A56-05%3A00&amp;precision=second" title="See timeline at 03/18/13 16:41:56">3 years ago</a> by jdunck
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Previous was me.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1363690165840986">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-19T05%3A49%3A25-05%3A00&amp;precision=second" title="See timeline at 03/19/13 05:49:25">3 years ago</a> by Ryan Leckey &lt;leckey.ryan@…&gt;
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+My proposal would be the following:<br />
+</p>
+<ul><li>startproject does not set SECRET_KEY
+</li><li>generate_secret_key (or some smaller name) be added to core (the command would just output the key so someone could pipe it to settings.py or some file referenced by settings.py
+</li><li>runserver uses some default non-secret key (its development anyway) if SECRET_KEY is not set
+</li></ul>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1364397495770934">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-27T10%3A18%3A15-05%3A00&amp;precision=second" title="See timeline at 03/27/13 10:18:15">3 years ago</a> by lukeplant
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+My own practice is to put secret key in a secrets.json file, which is parsed by settings.py. The more I think about it, the more benefits I can see:<br />
+</p>
+<ul><li>The code to use it from settings.py is really easy:
+<pre class="wiki">import json
+secrets = json.load(file("secrets.json"))
+SECRET_KEY = secrets['SECRET_KEY']
+</pre></li></ul><ul><li>It is less likely to be checked into source control due to the different file extension
+</li><li>If it is checked into VCS, then it should be relatively simple to rebuild the VCS history without that single file, allowing you to republish your fixed repo.
+</li><li>You can put more things in there - any other passwords etc. that should not be checked into source control.
+</li><li>Django management commands could correctly parse and <strong>re-write</strong> this file automatically, unlike something that was Python syntax.
+</li><li>Other systems can parse this file to extract passwords (I often need this in deployment)
+</li></ul>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1380755306910432">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-10-02T18%3A08%3A26-05%3A00&amp;precision=second" title="See timeline at 10/02/13 18:08:26">2 years ago</a> by unaizalakain
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I do that too but, like mentioned by Jacob:<br />
+</p>
+<blockquote class="citation">
+<p>
+How does this handle multiple web servers, though? Seems like if you<br />
+weren't careful you'd end up with differing secrets across your web<br />
+nodes, bad news.<br />
+</p>
+</blockquote>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1380755320449159">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-10-02T18%3A08%3A40-05%3A00&amp;precision=second" title="See timeline at 10/02/13 18:08:40">2 years ago</a> by unaizalakain
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>unai@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-7-1390636024904886">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-01-25T01%3A47%3A04-06%3A00&amp;precision=second" title="See timeline at 01/25/14 01:47:04">2 years ago</a> by wim@…
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+For me, a very easy solution would work:<br />
+</p>
+<p>
+from secrets import SECRET_KEY<br />
+</p>
+<p>
+It is easier to remember to keep secrets.py out of your repo than to keep settings.py out of your repo, and I would like to have the default project layout to use this approach.<br />
+</p>
+<p>
+On multiple servers, just copy secrets.py to the other servers.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1391804052840325">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-02-07T14%3A14%3A12-06%3A00&amp;precision=second" title="See timeline at 02/07/14 14:14:12">2 years ago</a> by erikr
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>eromijn@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-9-1393170380058546">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-02-23T09%3A46%3A20-06%3A00&amp;precision=second" title="See timeline at 02/23/14 09:46:20">2 years ago</a> by erikr
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-keywords">
+      <strong class="trac-field-keywords">Keywords</strong>
+        <em>nlsprint14</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I think the horizon method is almost perfect. For N=1 deployments, it simply fixes the problem without any special effort being required. Yes, importing from a secrets module or JSON file also adds security, but simply require more effort than the horizon method.<br />
+</p>
+<p>
+For N&gt;1 deployments, we could fall back to a form of the current management, which seems to mean that most people roll something themselves. That means we add no security for N&gt;1, but improving it for N=1 is already a great step forward. So, the default setting for secret key would be to autogenerate or read, but it can be overridden like any other setting. The patch for all of this is fairly simple, and I would be happy to contribute it.<br />
+</p>
+<p>
+However, I see an important issue for which I do not have an answer yet: if someone moves from N=1 to N&gt;1 deployment, they will silently start using different secret keys. No warning is given. Depending on chance, users will encounter random failures with some features, and the cause will not be obvious. If we want to make this change, we should try to find some way so that developers are reminded to change their secret key management when they move from N=1 to N&gt;1.<br />
+</p>
+<p>
+I can't think of any particular way to do this. Django is not aware of how many servers are running. And when trying to validate some data which involves the secret key, we can only check whether or not it is valid, not whether it might be valid with the secret key that was configured on another server. Secret key misalignment is not distinguishable from any other issue. Any suggestions?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-10-1400901487571402">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-23T22%3A18%3A07-05%3A00&amp;precision=second" title="See timeline at 05/23/14 22:18:07">22 months ago</a> by bendavis78
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>bendavis78</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+I'm also +1 for auto-generating the key à la horizon. A good point is made in <a class="ticket" href="/ticket/20081#comment:9" title="Comment 9">comment:9</a> that one potential problem is when moving from a "single" to "multi" deployment (eg, if a new dev is unfamiliar with SECRET_KEY they might be caught by surprise). <br />
+</p>
+<p>
+I think <tt>django.conf.Settings()</tt> should generate <tt>SECRET_KEY</tt> based on a new setting called <tt>SECRET_KEY_FILE</tt>. If that setting is empty, <tt>Settings.__init__</tt>  will fail in the same way it currently does if <tt>SECRET_KEY</tt> is empty. The new setting for <tt>SECRET_KEY_FILE</tt> can be accompanied by documentation (using comments in settings.py) saying that if the file does not exist it will be auto-generated, along with the caveat that the key must remain the same in multi-server environments. When starting a new project via "startproject", <tt>SECRET_KEY_FILE</tt> should default to an empty string. So whether a dev is running startproject or upgrading, they will be forced to look at the setting and understand what it does.<br />
+</p>
+<p>
+We could further protect devs from slipping up by storing known value in the database that is hashed using the secret key. This could be set during the auto-generate function. Then, during startup we could check the stored hash against the known value, and if they don't match raise an exception explaining that if you *know* the secret key must be changed and you understand the implications, then you should manually re-hash that known value in the database.<br />
+</p>
+<p>
+Also the function that generates the key should raise an exception if the file exists. In that case file should have to be removed or changed manually.<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2014-05-23T22%3A19%3A44-05%3A00&amp;precision=second" title="See timeline at 05/23/14 22:19:44">22 months ago</a>
+        by bendavis78
+      (<a href="/ticket/20081?cversion=0&amp;cnum_hist=10#comment:10">previous</a>)
+      (<a href="/ticket/20081?action=comment-diff&amp;cnum=10&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1400905309067663">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-23T23%3A21%3A49-05%3A00&amp;precision=second" title="See timeline at 05/23/14 23:21:49">22 months ago</a> by bendavis78
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Actually, after thinking it through a bit more, I might be -1 on auto-generating the key, but still +1 on having <tt>SECRET_KEY_FILE</tt> and possibly a hashed known value stored in the db to protect against change. A management command is more explicit, and forces the dev to be  involved in the security process. I also think this process should be consistent whether or not DEBUG is True.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-12-1401045119348731">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:12" class="cnum">
+    <a href="#comment:12">comment:12</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-25T14%3A11%3A59-05%3A00&amp;precision=second" title="See timeline at 05/25/14 14:11:59">22 months ago</a> by aj7may
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Maybe setting the default value in settings.py to something like the following would encourage some good practices:<br />
+</p>
+<p>
+SECRET_KEY = os.getenv('SECRET_KEY')<br />
+</p>
+<p>
+developers can then run the test server with the default secret key, while the real secret key remains a secret on the production app servers.<br />
+</p>
+<p>
+Inspired by <a class="ext-link" href="http://12factor.net/config"><span class="icon">​</span>http://12factor.net/config</a><br />
+</p>
+<p>
+What do you think?<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-13-1401045240569008">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:13" class="cnum">
+    <a href="#comment:13">comment:13</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-25T14%3A14%3A00-05%3A00&amp;precision=second" title="See timeline at 05/25/14 14:14:00">22 months ago</a> by aj7may
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+In addition, a generatesecret command, as mentioned earlier, could be implemented and used to generate those keys.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-14-1401075998457084">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:14" class="cnum">
+    <a href="#comment:14">comment:14</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-25T22%3A46%3A38-05%3A00&amp;precision=second" title="See timeline at 05/25/14 22:46:38">22 months ago</a> by aj7may
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-owner">
+      <strong class="trac-field-owner">Owner</strong>
+        changed from <em>nobody</em> to <em>aj7may</em>
+    </li><li class="trac-field-status">
+      <strong class="trac-field-status">Status</strong>
+        changed from <em>new</em> to <em>assigned</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+Here is a patch that accomplishes what I stated above.  Looking for feedback.<br />
+</p>
+<p>
+<a class="ext-link" href="https://github.com/django/django/pull/2714"><span class="icon">​</span>https://github.com/django/django/pull/2714</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-15-1401076025801915">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:15" class="cnum">
+    <a href="#comment:15">comment:15</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-25T22%3A47%3A05-05%3A00&amp;precision=second" title="See timeline at 05/25/14 22:47:05">22 months ago</a> by aj7may
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-has_patch">
+      <strong class="trac-field-has_patch">Has patch</strong>
+        set
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-16-1401223728789444">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:16" class="cnum">
+    <a href="#comment:16">comment:16</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-05-27T15%3A48%3A48-05%3A00&amp;precision=second" title="See timeline at 05/27/14 15:48:48">22 months ago</a> by PaulM
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I left a comment on the PR, but to summarize here:<br />
+</p>
+<p>
+-1 on storing this in an environment variable.<br />
+</p>
+<p>
+It is already possible to follow that advice with Django, but I disagree strongly with the 12factor website about the security and practicality of that approach in the context of a typical Django deployment.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-17-1401907155204225">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:17" class="cnum">
+    <a href="#comment:17">comment:17</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-06-04T13%3A39%3A15-05%3A00&amp;precision=second" title="See timeline at 06/04/14 13:39:15">22 months ago</a> by anonymous
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+So there is <a class="ext-link" href="https://github.com/django/django/pull/2714"><span class="icon">​</span>https://github.com/django/django/pull/2714</a> which implements this. I like having a command to generate a secret key, and the idea of a secret key file. However I think that automatically generating the secret key is going to lead to footgun-ey behavior. This mentions N=1 deployments, however it doesn't account for migrations or the like. If we're creating this file for users, there is a good chance they won't know it even exists. This adds a file that they should be backing up/copying over during a server migration that they aren't even really aware exists. This is worse on a platform like Heroku, where if they leave this to generate the file by default, it's going to get a new value every time the app restarts due to the ephemeral FS. Last I looked Heroku restarted the dyno's at least once a day, and for a n=1 deployment there is a decent chance it's going to get idled out as well. Essentially I think the automatic generation is being too clever and implicit.<br />
+</p>
+<p>
+I also am not a giant fan of importing from django inside of the settings file. It seems like it's a good way to introduce circular imports that will be tricky to debug.<br />
+</p>
+<p>
+I think it would b ebetter for the PR to add a setting, <tt>SECRET_KEY_FILE</tt> which will be used to securely load the secret key from a file (doing all of the proper things to ensure that the file has safe permissions). There should also be the command that the PR has to generate such a file, or pass <tt>-</tt> to pipe it to stdout.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-18-1402060064753053">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:18" class="cnum">
+    <a href="#comment:18">comment:18</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-06-06T08%3A07%3A44-05%3A00&amp;precision=second" title="See timeline at 06/06/14 08:07:44">22 months ago</a> by aj7may
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Got lots of feedback.  I'm working on incorporating some of these ideas.  I'll leave a note here when the PR has been updated.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-19-1402626197002429">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:19" class="cnum">
+    <a href="#comment:19">comment:19</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-06-12T21%3A23%3A17-05%3A00&amp;precision=second" title="See timeline at 06/12/14 21:23:17">21 months ago</a> by aj7may
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Pull request updated: ​<a class="ext-link" href="https://github.com/django/django/pull/2714"><span class="icon">​</span>https://github.com/django/django/pull/2714</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-20-1406541587889218">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:20" class="cnum">
+    <a href="#comment:20">comment:20</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2014-07-28T04%3A59%3A47-05%3A00&amp;precision=second" title="See timeline at 07/28/14 04:59:47">20 months ago</a> by slurms
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        set
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-21-1421393281894268">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:21" class="cnum">
+    <a href="#comment:21">comment:21</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-01-16T01%3A28%3A01-06%3A00&amp;precision=second" title="See timeline at 01/16/15 01:28:01">14 months ago</a> by berkerpeksag
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        set
+    </li><li class="trac-field-needs_better_patch">
+      <strong class="trac-field-needs_better_patch">Patch needs improvement</strong>
+        set
+    </li><li class="trac-field-version">
+      <strong class="trac-field-version">Version</strong>
+        changed from <em>1.5</em> to <em>master</em>
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-22-1429205373443523">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:22" class="cnum">
+    <a href="#comment:22">comment:22</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-04-16T12%3A29%3A33-05%3A00&amp;precision=second" title="See timeline at 04/16/15 12:29:33">11 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-needs_docs">
+      <strong class="trac-field-needs_docs">Needs documentation</strong>
+        unset
+    </li><li class="trac-field-needs_tests">
+      <strong class="trac-field-needs_tests">Needs tests</strong>
+        unset
+    </li>
+  </ul>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/20081?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/20081?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/20081?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>

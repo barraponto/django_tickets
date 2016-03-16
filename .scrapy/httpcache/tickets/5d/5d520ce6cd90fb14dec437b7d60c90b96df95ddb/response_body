@@ -1,0 +1,842 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  
+  
+
+  
+
+
+  <head>
+    <title>
+      #20147 (Provide an alternative to request.META for accessing HTTP headers)
+     – Django
+    </title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--[if IE]><script type="text/javascript">
+      if (/^#__msie303:/.test(window.location.hash))
+        window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+    </script><![endif]-->
+        <link rel="search" href="/search" />
+        <link rel="prev" href="/ticket/20146" title="Ticket #20146" />
+        <link rel="last" href="/ticket/26358" title="Ticket #26358" />
+        <link rel="help" href="/wiki/TracGuide" />
+        <link rel="alternate" href="/ticket/20147?format=csv" type="text/csv" class="csv" title="Comma-delimited Text" /><link rel="alternate" href="/ticket/20147?format=tab" type="text/tab-separated-values" class="tab" title="Tab-delimited Text" /><link rel="alternate" href="/ticket/20147?format=rss" type="application/rss+xml" class="rss" title="RSS Feed" />
+        <link rel="next" href="/ticket/20148" title="Ticket #20148" />
+        <link rel="start" href="/wiki" />
+        <link rel="stylesheet" href="/chrome/common/css/trac.css" type="text/css" /><link rel="stylesheet" href="/chrome/common/css/ticket.css" type="text/css" />
+        <link rel="first" href="/ticket/1" title="Ticket #1" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <style id="trac-noscript" type="text/css">.trac-noscript { display: none !important }</style>
+      <link type="application/opensearchdescription+xml" rel="search" href="/search/opensearch" title="Search Django" />
+    <script type="text/javascript">
+      var auto_preview_timeout=2.0;
+      var form_token="c194439d9bc0beebf8673bad";
+      var comments_prefs={"comments_only":"false","comments_order":"oldest"};
+    </script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/jquery.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/babel.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/trac.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/search.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/folding.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/wikitoolbar.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/resizer.js"></script>
+      <script type="text/javascript" charset="utf-8" src="/chrome/common/js/auto_preview.js"></script>
+    <script type="text/javascript">
+      jQuery("#trac-noscript").remove();
+      jQuery(document).ready(function($) {
+        $(".trac-autofocus").focus();
+        $(".trac-target-new").attr("target", "_blank");
+        setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+        $(".trac-disable-on-submit").disableOnSubmit();
+      });
+    </script>
+    <script type="text/javascript" src="/chrome/common/js/threaded_comments.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("div.description").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+        $(".foldable").enableFolding(false, true);
+      /*<![CDATA[*/
+        $("#attachments").toggleClass("collapsed");
+        $("#trac-up-attachments").click(function () {
+          $("#attachments").removeClass("collapsed");
+          return true;
+        });
+        $("#modify").parent().toggleClass("collapsed");
+        $(".trac-topnav a").click(function() { $("#modify").parent().removeClass("collapsed"); });
+        /* only enable control elements for the currently selected action */
+        var actions = $("#action input[name='action']");
+        function updateActionFields() {
+          actions.each(function () {
+            $(this).siblings().find("*[id]").enable($(this).checked());
+            $(this).siblings().filter("*[id]").enable($(this).checked());
+          });
+        }
+        actions.click(updateActionFields);
+        updateActionFields();
+        function setRevertHandler() {
+          $("button.trac-revert").click(function() {
+            var div = $("div", this);
+            var field_name = div[0].id.substr(7);
+            var field_value = div.text();
+            var input = $("#propertyform *[name=field_" + field_name + "]");
+            if (input.length > 0) {
+              if (input.filter("input[type=radio]").length > 0) {
+                input.val([field_value]);
+              } else if (input.filter("input[type=checkbox]").length > 0) {
+                input.val(field_value == "1" ? [field_value] : []);
+              } else {
+                input.val(field_value);
+              }
+            } else { // Special case for CC checkbox
+              input = $("#propertyform input[name=cc_update]").val([]);
+            }
+            input.change();
+            $(this).closest("li").remove();
+            return false;
+          });
+        }
+        setRevertHandler();
+        var comment_focused = false;
+        $("#comment").focus(function() { comment_focused = true; })
+                     .blur(function() { comment_focused = false; });
+        $("#propertyform").autoSubmit({preview: '1'}, function(data, reply) {
+          var items = $(reply);
+          // Update ticket box
+          $("#ticket").replaceWith(items.filter('#ticket'));
+          // Unthread, unrevert and update changelog
+          if (!$('#trac-comments-oldest').checked())
+            $('#trac-comments-oldest').click().change();
+          $("#changelog").replaceWith(items.filter("#changelog"));
+          if ($('#trac-comments-only-toggle').attr('checked'))
+            $('#trac-comments-only-toggle').click().attr('checked', true);
+          // Show warning
+          var new_changes = $("#changelog .trac-new");
+          $("#trac-edit-warning").toggle(new_changes.length != 0);
+          if (new_changes.length != 0)
+            $("#changelog").parent().show().removeClass("collapsed");
+          // Update view time
+          $("#propertyform input[name='view_time']").replaceWith(items.filter("input[name='view_time']"));
+          // Update preview
+          var preview = $("#ticketchange").html(items.filter('#preview').children());
+          var show_preview = preview.children().length != 0;
+          $("#ticketchange").toggle(show_preview);
+          setRevertHandler();
+          // Collapse property form if comment editor has focus
+          if (show_preview && comment_focused)
+            $("#modify").parent().addClass("collapsed");
+          // Execute scripts to load stylesheets
+          items.filter("script").appendTo("head");
+        }, "#ticketchange .trac-loading");
+        $("#trac-comment-editor").autoSubmit({preview_comment: '1'}, function(data, reply) {
+          var comment = $("#trac-comment-editor").next("div.comment").html(reply);
+          comment.toggle(comment.children().length != 0);
+        }, "#changelog .trac-loading");
+        /*]]>*/
+      });
+    </script>
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="${href.chrome('site/css/output-ie.css')}" />
+     <![endif]-->
+    <!--[if gt IE 8]><!-->
+        <link rel="stylesheet" href="/chrome/site/css/output.css" />
+    <!--<![endif]-->
+    <link rel="stylesheet" href="/chrome/site/css/trachacks.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.6/webfont.js"></script>
+    <script>
+    WebFont.load({
+        google: {
+            families: ['Inconsolata:400,700:latin', 'Roboto:400italic,700italic,300,700,400:latin']
+        }
+    });
+    </script>
+    <script src="/chrome/site/js/lib/modernizr.js"></script>
+      <script type="text/javascript" src="/chrome/site/tickethacks.js"></script>
+  </head>
+  <body id="generic">
+    <div role="banner" id="top">
+      <div class="container">
+        <a class="logo" href="https://www.djangoproject.com/">Django</a>
+        <p class="meta">The web framework for perfectionists with deadlines.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="https://www.djangoproject.com/">Overview</a></li>
+            <li><a href="https://www.djangoproject.com/download/">Download</a></li>
+            <li><a href="https://docs.djangoproject.com/">Documentation</a></li>
+            <li><a href="https://www.djangoproject.com/weblog/">News</a></li>
+            <li><a href="https://www.djangoproject.com/community/">Community</a></li>
+            <li class="active"><a href="/">Code</a></li>
+            <li><a href="https://www.djangoproject.com/foundation/">About</a></li>
+            <li><a href="https://www.djangoproject.com/fundraising/">♥ Donate</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="copy-banner">
+      <div class="container">
+        <h1>Code</h1>
+      </div>
+    </div>
+      <div class="container full-width">
+        <div role="main">
+          <div id="metanav" class="nav">
+    <ul>
+      <li class="first"><a href="/github/login">GitHub Login</a></li><li><a href="/login">DjangoProject Login</a></li><li><a href="/prefs">Preferences</a></li><li class="last"><a href="/rpc">API</a></li>
+    </ul>
+  </div>
+          <div id="mainnav" class="nav">
+    <ul>
+      <li class="first active"><a href="/query">View Tickets</a></li><li><a href="/wiki/Reports">Reports</a></li><li><a href="/timeline">Timeline</a></li><li><a href="/wiki">Wiki</a></li><li class="last"><a href="/search">Search</a></li>
+    </ul>
+  </div>
+          <div id="main">
+      <div id="ctxtnav" class="nav">
+        <h2>Context Navigation</h2>
+        <ul>
+          <li class="first"><span>&larr; <a class="prev" href="/ticket/20146" title="Ticket #20146">Previous Ticket</a></span></li><li class="last"><span><a class="next" href="/ticket/20148" title="Ticket #20148">Next Ticket</a> &rarr;</span></li>
+        </ul>
+        <hr />
+      </div>
+    <div id="content" class="ticket">
+        <div id="ticket" class="trac-content ">
+  <div class="date">
+    <p>Opened <a class="timeline" href="/timeline?from=2013-03-27T07%3A37%3A47-05%3A00&amp;precision=second" title="See timeline at 03/27/13 07:37:47">3 years ago</a></p>
+    <p>Last modified <a class="timeline" href="/timeline?from=2015-07-24T09%3A13%3A21-05%3A00&amp;precision=second" title="See timeline at 07/24/15 09:13:21">8 months ago</a></p>
+  </div>
+  <h2>
+    <a href="/ticket/20147" class="trac-id">#20147</a>
+    <span class="trac-status">
+      <a href="/query?status=new">new</a>
+    </span>
+    <span class="trac-type">
+      <a href="/query?status=!closed&amp;type=New+feature">New feature</a>
+    </span>
+  </h2>
+  <h1 id="trac-ticket-title" class="searchable">
+    <span class="summary">Provide an alternative to request.META for accessing HTTP headers</span>
+  </h1>
+  <table class="properties">
+    <tr>
+      <th id="h_reporter">Reported by:</th>
+      <td headers="h_reporter" class="searchable"><a href="/query?status=!closed&amp;reporter=lukeplant">lukeplant</a></td>
+      <th id="h_owner">Owned by:</th>
+      <td headers="h_owner"><a href="/query?status=!closed&amp;owner=nobody">nobody</a></td>
+    </tr>
+    <tr>
+        <th id="h_component">
+          Component:
+        </th>
+        <td headers="h_component">
+              <a href="/query?status=!closed&amp;component=HTTP+handling">HTTP handling</a>
+        </td>
+        <th id="h_version">
+          Version:
+        </th>
+        <td headers="h_version">
+              <a href="/query?status=!closed&amp;version=1.5">1.5</a>
+        </td>
+    </tr><tr>
+        <th id="h_severity">
+          Severity:
+        </th>
+        <td headers="h_severity">
+              <a href="/query?status=!closed&amp;severity=Normal">Normal</a>
+        </td>
+        <th id="h_keywords" class="missing">
+          Keywords:
+        </th>
+        <td headers="h_keywords" class="searchable">
+        </td>
+    </tr><tr>
+        <th id="h_cc">
+          Cc:
+        </th>
+        <td headers="h_cc" class="searchable">
+              marc.tamlyn@…, tom@…, ben@…
+        </td>
+        <th id="h_stage">
+          Triage Stage:
+        </th>
+        <td headers="h_stage">
+              <a href="/query?status=!closed&amp;stage=Accepted">Accepted</a>
+        </td>
+    </tr><tr>
+        <th id="h_has_patch">
+          Has patch:
+        </th>
+        <td headers="h_has_patch">
+              <a href="/query?status=!closed&amp;has_patch=0">no</a>
+        </td>
+        <th id="h_needs_docs">
+          Needs documentation:
+        </th>
+        <td headers="h_needs_docs">
+              <a href="/query?status=!closed&amp;needs_docs=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_needs_tests">
+          Needs tests:
+        </th>
+        <td headers="h_needs_tests">
+              <a href="/query?status=!closed&amp;needs_tests=0">no</a>
+        </td>
+        <th id="h_needs_better_patch">
+          Patch needs improvement:
+        </th>
+        <td headers="h_needs_better_patch">
+              <a href="/query?status=!closed&amp;needs_better_patch=0">no</a>
+        </td>
+    </tr><tr>
+        <th id="h_easy">
+          Easy pickings:
+        </th>
+        <td headers="h_easy">
+              <a href="/query?status=!closed&amp;easy=0">no</a>
+        </td>
+        <th id="h_ui_ux">
+          UI/UX:
+        </th>
+        <td headers="h_ui_ux">
+              <a href="/query?status=!closed&amp;ui_ux=0">no</a>
+        </td>
+    </tr>
+  </table>
+  <div class="description">
+    <h3 id="comment:description">
+      Description
+    </h3>
+    <div class="searchable">
+      <p>
+From the docs:<br />
+</p>
+<blockquote class="citation">
+<p>
+<tt>HttpRequest.META</tt><br />
+A standard Python dictionary containing all available HTTP headers...<br />
+</p>
+<p>
+With the exception of CONTENT_LENGTH and CONTENT_TYPE, as given above, any HTTP headers in the request are converted to META keys by converting all characters to uppercase, replacing any hyphens with underscores and adding an HTTP_ prefix to the name. So, for example, a header called X-Bender would be mapped to the META key HTTP_X_BENDER.<br />
+</p>
+</blockquote>
+<p>
+The question is, why? Why do we have this ridiculous transform? It is pure silliness, whose only explanation is a quirk of CGI, which is now totally irrelevant.<br />
+</p>
+<p>
+You should be able to look up a header in the HTTP spec and do something very simple to get it from the HTTP request. How about this API:<br />
+</p>
+<pre class="wiki">request.HEADERS['Host']
+</pre><p>
+(for consistency with GET/POST/FILES etc.), or even <br />
+</p>
+<pre class="wiki">request['Host']
+</pre><p>
+Dictionary access should obey HTTP rules about case-sensitivity of the header names.<br />
+</p>
+<p>
+This also would has the advantage that <tt>repr(request)</tt> wouldn't have lots of junk you don't need i.e. the entire content of <tt>os.environ</tt>, which, on a developer machine especially, can have a <strong>lot</strong> of noise (mine does).<br />
+</p>
+<p>
+It also future-proofs us for when WSGI is replaced with something more sensible, and the whole silly round trip to <tt>os.environ</tt> can be removed completely, or if we want to support something else parallel to WSGI and client code wants to access HTTP headers in the same way for both.<br />
+</p>
+<p>
+This leaves a few things in META that are not derived from an HTTP header, and do not have a way of accessing them from the request object. I think these are just:<br />
+</p>
+<ul><li>SCRIPT_NAME - this is a CGI leftover, that is only useful in constructing other things, AFAICS
+</li><li>QUERY_STRING - this can be easily constructed from <tt>request.get_full_path()</tt> for the rare times that you need the raw query string rather than request.GET
+</li><li>SERVER_NAME - should use get_host() instead
+</li><li>SERVER_PORT - use get_host()
+</li><li>SERVER_PROTOCOL - could use is_secure(), but perhaps it would be nice to have a convenience <tt>get_protocol()</tt> method.
+</li></ul><p>
+(see <a class="ext-link" href="http://wsgi.readthedocs.org/en/latest/definitions.html"><span class="icon">​</span>http://wsgi.readthedocs.org/en/latest/definitions.html</a>)<br />
+</p>
+
+    </div>
+  </div>
+</div>
+          
+
+        <div>
+          <div style="position: relative">
+            <form id="prefs" method="get" action="/prefs" style="position: absolute; right: 0">
+              <div id="trac-comments-order">
+                <input type="radio" id="trac-comments-oldest" name="trac-comments-order" value="oldest" checked="checked" />
+                <label for="trac-comments-oldest">Oldest first</label>
+                <input type="radio" id="trac-comments-newest" name="trac-comments-order" value="newest" />
+                <label for="trac-comments-newest">Newest first</label>
+                <span id="trac-threaded-toggle" style="display: none">
+                  <input type="radio" id="trac-comments-threaded" name="trac-comments-order" value="threaded" />
+                  <label for="trac-comments-threaded">Threaded</label>
+                </span>
+              </div>
+              <div>
+                <input id="trac-comments-only-toggle" type="checkbox" />
+                <label for="trac-comments-only-toggle">Comments only</label>
+              </div>
+            </form>
+          </div>
+          <h3 class="foldable">Change History <span class="trac-count">(15)</span></h3>
+          <div id="changelog">
+              <div class="change" id="trac-change-1-1364512234051625">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:1" class="cnum">
+    <a href="#comment:1">comment:1</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-03-28T18%3A10%3A34-05%3A00&amp;precision=second" title="See timeline at 03/28/13 18:10:34">3 years ago</a> by lukeplant
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+A strong argument against the <tt>request['Referer']</tt> API is the use of request in templates (e.g. <tt>if request.GET.some_flag</tt>), which conflates dictionary access and attribute access, probably making <tt>request.HEADERS['Referer']</tt> a much safer API.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-2-1365426218406766">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:2" class="cnum">
+    <a href="#comment:2">comment:2</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-08T08%3A03%3A38-05%3A00&amp;precision=second" title="See timeline at 04/08/13 08:03:38">3 years ago</a> by anonymous
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+HTTP headers are case insensitive. You want to get rid of the transform, but what happens when someone sends "accept: " and you check for <tt>HEADERS["Accept"]</tt>?<br />
+</p>
+
+    </div>
+  <div class="trac-lastedit ">
+    Last edited <a class="timeline" href="/timeline?from=2013-04-08T09%3A43%3A58-05%3A00&amp;precision=second" title="See timeline at 04/08/13 09:43:58">3 years ago</a>
+        by lukeplant
+      (<a href="/ticket/20147?cversion=0&amp;cnum_hist=2#comment:2">previous</a>)
+      (<a href="/ticket/20147?action=comment-diff&amp;cnum=2&amp;version=1">diff</a>)
+  </div>
+
+              </div>
+              <div class="change" id="trac-change-3-1365432438054372">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:3" class="cnum">
+    <a href="#comment:3">comment:3</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-08T09%3A47%3A18-05%3A00&amp;precision=second" title="See timeline at 04/08/13 09:47:18">3 years ago</a> by lukeplant
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+As stated above, "Dictionary access should obey HTTP rules about case-sensitivity of the header names."<br />
+</p>
+<p>
+I didn't say get rid of the transform - it should be done within the API, not by the user of the API. In terms of implementation, <tt>request.HEADERS['Accept']</tt> will map straight to <tt>request._META['HTTP_ACCEPT']</tt>, at least for wsgi, or do something equivalent that will ensure case-insensitivity.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-4-1365451883186929">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:4" class="cnum">
+    <a href="#comment:4">comment:4</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-08T15%3A11%3A23-05%3A00&amp;precision=second" title="See timeline at 04/08/13 15:11:23">3 years ago</a> by lukeplant
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+There are a few more things that need considering if this is to be done:<br />
+</p>
+<ul><li><tt>RequestFactory</tt> and the test <tt>Client</tt>, and their APIs which pass directly to request.META.
+</li><li><tt>REMOTE_ADDRESS</tt>, <tt>REMOTE_USER</tt>
+</li><li><tt>SECURE_PROXY_SSL_HEADER</tt>
+</li></ul>
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-5-1365466624019528">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:5" class="cnum">
+    <a href="#comment:5">comment:5</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-08T19%3A17%3A04-05%3A00&amp;precision=second" title="See timeline at 04/08/13 19:17:04">3 years ago</a> by carljm
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Minor bikeshed-type question: is there really value in making <tt>request.HEADERS</tt> all-caps? I realize the parallel to <tt>request.POST</tt>, <tt>request.GET</tt>, and <tt>request.META</tt>, but the former two are all-caps simply because HTTP methods are usually written that way. I guess I'd just like to see a bit of rationale spelled out for how we decide whether a given request attribute ought to be all-caps; I'd probably lean towards just <tt>request.headers</tt> for the new API.<br />
+</p>
+<p>
+More discussion of this proposal (in particular, whether to deprecate/change <tt>request.META</tt>) is here: <a class="ext-link" href="https://groups.google.com/d/topic/django-developers/Jvs3F79cY4Y/discussion"><span class="icon">​</span>https://groups.google.com/d/topic/django-developers/Jvs3F79cY4Y/discussion</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-6-1365498802054138">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:6" class="cnum">
+    <a href="#comment:6">comment:6</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-09T04%3A13%3A22-05%3A00&amp;precision=second" title="See timeline at 04/09/13 04:13:22">3 years ago</a> by mjtamlyn
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>marc.tamlyn@…</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+It would be consistent for <tt>request.headers</tt> to be lowercase to match up with <tt>request.body</tt> for example.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-7-1365502212350816">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:7" class="cnum">
+    <a href="#comment:7">comment:7</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-09T05%3A10%3A12-05%3A00&amp;precision=second" title="See timeline at 04/09/13 05:10:12">3 years ago</a> by anonymous
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Should we consider having <tt>request.headers</tt> return unicode values rather than byte values?<br />
+</p>
+<p>
+Correctly decoding HTTP headers is slightly fiddly - the default supported encoding is <tt>iso-8859-1</tt>,<br />
+but <tt>utf-8</tt> can also be supported as per RFC 2231, RFC 5987.<br />
+</p>
+<p>
+Getting the decoding right probably isn't something we want developers to have to think about.<br />
+</p>
+<p>
+Note: For real-world usage see this example of browser support for <tt>utf-8</tt> in uploaded filenames: <a class="ext-link" href="https://code.google.com/p/chromium/issues/detail?id=57830"><span class="icon">​</span>https://code.google.com/p/chromium/issues/detail?id=57830</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-8-1365502370202690">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:8" class="cnum">
+    <a href="#comment:8">comment:8</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-09T05%3A12%3A50-05%3A00&amp;precision=second" title="See timeline at 04/09/13 05:12:50">3 years ago</a> by tomchristie
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>tom@…</em> added
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+(Ooops, that <tt>anonymous</tt> comment is mine.)<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-9-1365503151655760">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:9" class="cnum">
+    <a href="#comment:9">comment:9</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-09T05%3A25%3A51-05%3A00&amp;precision=second" title="See timeline at 04/09/13 05:25:51">3 years ago</a> by tomchristie
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Okay, noticed that the link to chrome's use of iso-8859-1 is actually for response headers, so disregard that.<br />
+</p>
+<p>
+The question regarding unicode vs byte values still stands, though.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-10-1365504707696276">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:10" class="cnum">
+    <a href="#comment:10">comment:10</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-09T05%3A51%3A47-05%3A00&amp;precision=second" title="See timeline at 04/09/13 05:51:47">3 years ago</a> by lukeplant
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+I'm happy with <tt>request.headers</tt> instead of <tt>request.HEADERS</tt> - the parallel to <tt>request.body</tt> does make more sense that <tt>request.GET</tt>.<br />
+</p>
+<p>
+Regarding unicode/bytes, it's a very thorny issue, and the more I look into it the worse it gets. PEP 3333 might apply, if we are assuming a simple mapping to <tt>request.META</tt>, but that essentially leaves decoding issues to the user if I'm reading it correctly.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-11-1365520880523911">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:11" class="cnum">
+    <a href="#comment:11">comment:11</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-09T10%3A21%3A20-05%3A00&amp;precision=second" title="See timeline at 04/09/13 10:21:20">3 years ago</a> by tomchristie
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Okay, maybe it's not obvious if unicode values would be preferable or not.<br />
+</p>
+<p>
+I thought I'd take a look at what the <tt>requests</tt> library does, and found this similar ticket: <a class="ext-link" href="https://github.com/kennethreitz/requests/pull/1181"><span class="icon">​</span>https://github.com/kennethreitz/requests/pull/1181</a><br />
+</p>
+<p>
+If it is something that we decide to do, then the following looks like it ought to do the trick:<br />
+</p>
+<pre class="wiki">from email.header import decode_header
+u''.join(header_bytes.decode(enc or 'iso-8859-1') for header_bytes, enc in decode_header(h))
+</pre><p>
+For further reference note that the <tt>httpbis</tt> spec is proposed to obsolete RFC2616, cleaning up &amp; clarifying underspecified bits of the spec.<br />
+The relevant section on header value encoding is here: <a class="ext-link" href="http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-19#section-3.2.2"><span class="icon">​</span>http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-19#section-3.2.2</a><br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-12-1365769436865693">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:12" class="cnum">
+    <a href="#comment:12">comment:12</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-04-12T07%3A23%3A56-05%3A00&amp;precision=second" title="See timeline at 04/12/13 07:23:56">3 years ago</a> by aaugustin
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-summary">
+      <strong class="trac-field-summary">Summary</strong>
+        changed from <em>Replace and deprecate request.META for HTTP headers</em> to <em>Provide an alternative to request.META for accessing HTTP headers</em>
+    </li><li class="trac-field-stage">
+      <strong class="trac-field-stage">Triage Stage</strong>
+        changed from <em>Unreviewed</em> to <em>Accepted</em>
+    </li>
+  </ul>
+    <div class="comment searchable">
+      <p>
+The mailing list discussion converged towards keeping META, but recommending a dict-like <tt>request.headers</tt>.<br />
+</p>
+<p>
+I'm updating the summary to reflect this.<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-13-1369154268162708">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:13" class="cnum">
+    <a href="#comment:13">comment:13</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2013-05-21T11%3A37%3A48-05%3A00&amp;precision=second" title="See timeline at 05/21/13 11:37:48">3 years ago</a> by astupidog
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+Regarding the transformation of request headers, for example from X-Bender to the META key HTTP_X_BENDER - <br />
+</p>
+<p>
+From what I see this transformation is not done in django but in the wsgi implementation.<br />
+</p>
+<p>
+I tested with apache mod_wsgi and with python's wsgiref and seems that they are doing this transformation not django.<br />
+</p>
+<p>
+I couldn't find it documented anywhere but see this from python's Lib/wsgiref/simple_server.py<br />
+</p>
+<p>
+99                for h in self.headers.headers:<br />
+100                    k,v = h.split(':',1)<br />
+101                    k=k.replace('-','_').upper(); v=v.strip()<br />
+102                    if k in env:<br />
+103                        continue                    # skip content length, type,etc.<br />
+104                    if 'HTTP_'+k in env:<br />
+105                        env['HTTP_'+k] += ','+v     # comma-separate multiple headers<br />
+106                    else:<br />
+107                        env['HTTP_'+k] = v<br />
+</p>
+
+    </div>
+
+              </div>
+              <div class="change" id="trac-change-14-1437568774118296">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:14" class="cnum">
+    <a href="#comment:14">comment:14</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-07-22T07%3A39%3A34-05%3A00&amp;precision=second" title="See timeline at 07/22/15 07:39:34">8 months ago</a> by benspaulding
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+  <ul class="changes">
+    <li class="trac-field-cc">
+      <strong class="trac-field-cc">Cc</strong>
+        <em>ben@…</em> added
+    </li>
+  </ul>
+
+              </div>
+              <div class="change" id="trac-change-15-1437747201658634">
+                
+  <h3 class="change">
+    <span class="threading">
+      <span id="comment:15" class="cnum">
+    <a href="#comment:15">comment:15</a>
+  </span>
+    </span>
+        Changed <a class="timeline" href="/timeline?from=2015-07-24T09%3A13%3A21-05%3A00&amp;precision=second" title="See timeline at 07/24/15 09:13:21">8 months ago</a> by timgraham
+  </h3>
+  <div class="trac-ticket-buttons">
+  </div>
+    <div class="comment searchable">
+      <p>
+See <a class="closed ticket" href="/ticket/16068" title="New feature: Ease access to request headers (closed: duplicate)">#16068</a> for a duplicate.<br />
+</p>
+
+    </div>
+
+              </div>
+          </div>
+        </div>
+      <div id="help"><strong>Note:</strong> See
+        <a href="/wiki/TracTickets">TracTickets</a> for help on using
+        tickets.</div>
+    </div>
+    <div id="altlinks">
+      <h3>Download in other formats:</h3>
+      <ul>
+        <li class="first">
+          <a rel="nofollow" href="/ticket/20147?format=csv" class="csv">Comma-delimited Text</a>
+        </li><li>
+          <a rel="nofollow" href="/ticket/20147?format=tab" class="tab">Tab-delimited Text</a>
+        </li><li class="last">
+          <a rel="nofollow" href="/ticket/20147?format=rss" class="rss">RSS Feed</a>
+        </li>
+      </ul>
+    </div>
+    </div>
+          <a href="#top" class="backtotop"><i class="icon icon-chevron-up"></i> Back to Top</a>
+        </div>
+      </div>
+    <div role="contentinfo">
+      <div class="subfooter">
+        <div class="container">
+          <h1 class="visuallyhidden">Django Links</h1>
+          <div class="col learn">
+            <h2>Learn More</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/overview/">About Django</a></li>
+              <li><a href="https://www.djangoproject.com/start/">Getting Started with Django</a></li>
+              <li><a href="https://www.djangoproject.com/foundation/">Django Software Foundation</a></li>
+              <li><a href="https://www.djangoproject.com/conduct/">Code of Conduct</a></li>
+            </ul>
+          </div>
+          <div class="col involved">
+            <h2>Get Involved</h2>
+            <ul>
+              <li><a href="https://www.djangoproject.com/community/">Join a Group</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/">Contribute to Django</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/contributing/bugs-and-features/#reporting-security-issues">Submit a Bug</a></li>
+              <li><a href="https://docs.djangoproject.com/en/dev/internals/security/">Report a Security Issue</a></li>
+            </ul>
+          </div>
+          <div class="col follow">
+            <h2>Follow Us</h2>
+            <ul>
+              <li><a href="http://github.com/django">GitHub</a></li>
+              <li><a href="https://twitter.com/djangoproject">Twitter</a></li>
+              <li><a href="https://www.djangoproject.com/rss/weblog/">News RSS</a></li>
+              <li><a href="https://groups.google.com/forum/#!forum/django-users">Django Users Mailing List</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="container">
+          <div class="footer-logo">
+            <a class="logo" href="https://djangoproject.com/">Django</a>
+          </div>
+          <ul class="thanks">
+            <li><span>Hosting by</span> <a class="rackspace" href="http://rackspace.com">Rackspace</a></li>
+            <li class="design"><span>Design by</span> <a class="threespot" href="http://www.threespot.com">Threespot</a> <span class="ampersand">&amp;</span> <a class="andrevv" href="http://andrevv.com/"></a></li>
+          </ul>
+          <p class="copyright">© 2005-2016
+              <a href="https://djangoproject.com/foundation/"> Django Software
+              Foundation</a> unless otherwise noted. Django is a
+              <a href="https://djangoproject.com/trademarks/">registered
+              trademark</a> of the Django Software Foundation.
+          </p>
+        </div>
+      </div>
+    </div>
+  <script data-main="/chrome/site/js/main.js" src="/chrome/site/js/lib/require.js"></script>
+  </body>
+</html>
